@@ -16,8 +16,8 @@
 options:
   version: 1.0-BETA1 # 机器人版本
   enabled-groups: "" # 机器人响应群聊
-  admin: "%{@superuser}% 1142313554 2896515622" # 机器人管理员名单
-  regadmin: "%{@superuser}% 1142313554 1833990862 2896515622" # 可操纵注册
+  admin: "2947665256 1142313554 2896515622" # 机器人管理员名单
+  regadmin: "2947665256 1142313554 1833990862 2896515622" # 可操纵注册
   vanish: "SinanGentoo Zerlight" # 隐身名单
   silent-mode: false # 静默模式 开启后不鸟普通玩家
   group_id: "1043731523"
