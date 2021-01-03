@@ -79,10 +79,13 @@ on bot message:
         set {_permission} to "绒布球"
       else:
         set {_permission} to "玩家"
-      {_playerList} contain {_sub2}:
-        bot reply "%{_sub2}%%nl%在线状态：是%nl%权限等级：%{_permission}%"
-      else: 
-        bot reply "%{_sub2}%%nl%在线状态：否%nl%权限等级：%{_permission}%"
+      if AuthMeApi.getInstance().isRegistered({_sub2}) is true:
+        {_playerList} contain {_sub2}:
+          bot reply "%{_sub2}%%nl%在线状态：是%nl%权限等级：%{_permission}%"
+        else: 
+          bot reply "%{_sub2}%%nl%在线状态：否%nl%权限等级：%{_permission}%"
+      else:
+        bot reply "%{_sub2}% 未注册"
     {_sub1} start with "info":
       set {_playerList} to placeholder "playerlist_online,normal,yes,list"
       set {_onlinePlayers} to placeholder "server_online"
