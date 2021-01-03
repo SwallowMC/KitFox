@@ -26,6 +26,7 @@ import: # 需要引用的java类
   org.bukkit.entity.Player
   org.bukkit.advancement.Advancement
   org.bukkit.event.player.PlayerAdvancementDoneEvent
+  org.bukkit.event.player.PlayerRespawnEvent
   org.bukkit.Server
   fr.xephi.authme.api.v3.AuthMeApi
   
@@ -48,9 +49,21 @@ on bot leave group:
   # 回复群信息
   if group-code is "1043731523":
     bot reply "%sender%(%qq%)离开了群聊"
-  
-on death of player:
-  command "/mcqqbot send group 1043731523 %player's name% 惨叫一声醒在了自己的床上" by console
+
+# on death of player:
+#   command "/mcqqbot send group 1043731523 %player's name% 惨叫一声醒在了自己的床上" by console
+
+# 玩家重生事件
+on PlayerRespawnEvent:
+  set {_isBedSpawn} to event.isBedSpawn()
+  set {_player} to event.getPlayer().getName()
+  if {_isBedSpawn} is true:
+    command "/mcqqbot send group 1043731523 %{_player}% 惨叫一声醒在了自己的床上" by console
+  else:
+    chance of 50%:
+      command "/mcqqbot send group 1043731523 %{_player}% 骂骂咧咧得醒在了主城" by console
+    chance of 50%:
+      command "/mcqqbot send group 1043731523 %{_player}% 迷迷糊糊得醒在了主城" by console
   
 # 当玩家加入时
 on join:
@@ -119,9 +132,13 @@ on bot message:
         set {_password} to subtext of {_sub2} from characters length of {_username}+2 to the length of {_sub2}
         set {_password} to the first (index of " " in {_password}-1) characters of {_password}
         if AuthMeApi.getInstance().isRegistered({_username}) is false:
-          command "/mcqqbot send group 1043731523 管理员%sender%(%qq%)注册了用户名为%{_username}%的玩家。" by console
           command "/authme register %{_username}% %{_password}%" by console
-          bot reply "该用户名注册成功！"
+          if AuthMeApi.getInstance().isRegistered({_username}) is false:
+            bot replay "注册失败，请检查用户名或密码是否符合规则！"
+            command "/mcqqbot send group 1043731523 管理员%sender%(%qq%)试图注册用户名为%{_username}%的玩家，但是失败了。" by console
+          else:
+            bot reply "该用户名注册成功！"
+            command "/mcqqbot send group 1043731523 管理员%sender%(%qq%)注册了用户名为%{_username}%的玩家。" by console
         else:
           bot reply "该用户名已被注册！"
       else if {@silent-mode} is false:
