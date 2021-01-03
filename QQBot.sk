@@ -20,7 +20,7 @@ options:
   regadmin: "%{@superuser}% 1142313554 1833990862 2896515622" # 可操纵注册
   vanish: "SinanGentoo Zerlight" # 隐身名单
   silent-mode: false # 静默模式 开启后不鸟普通玩家
-  group_id: "1043731523"
+  group_id: "%{@group_id}%"
   superuser: "2947665256"
 
 import: # 需要引用的java类
@@ -55,18 +55,30 @@ on bot leave group:
 # on death of player:
 #   command "/mcqqbot send group %{@group_id}% %player's name% 惨叫一声醒在了自己的床上" by console
 
-# 玩家重生事件
-on PlayerRespawnEvent:
-  set {_isBedSpawn} to event.isBedSpawn()
-  set {_player} to event.getPlayer().getName()
-  if {_isBedSpawn} is true:
-    command "/mcqqbot send group %{@group_id}% %{_player}% 惨叫一声醒在了自己的床上" by console
+on death of player:
+  if "%event-damagecause%" is "void":
+    command "/mcqqbot send group %{@group_id}% %player's name% 被深渊吞噬" by console
+  else if "%event-damagecause%" is "fall":
+    command "/mcqqbot send group %{@group_id}% %player's name% 失足了" by console
+  else if "%event-damagecause%" is "burning":
+    command "/mcqqbot send group %{@group_id}% %player's name% 火冒三丈（物理）" by console
+  else if "%event-damagecause%" is "lightning":
+    command "/mcqqbot send group %{@group_id}%  天空一声巨响，%player's name% 回到了床上" by console
+  else if "%event-damagecause%" is "fire":
+    command "/mcqqbot send group %{@group_id}% 那一刻，%player's name% 成为了光" by console
+  else if "%event-damagecause%" is "sweep attack":
+    command "/mcqqbot send group %{@group_id}% %player's name% 猛吸了一口剑气" by console
+  else if "%event-damagecause%" is "potion":
+    command "/mcqqbot send group %{@group_id}% 那一刻，%player's name% 成为了白雪公主" by console
+  else if "%event-damagecause%" is "entity explosion":
+    command "/mcqqbot send group %{@group_id}% %player's name% 被干爆了" by console
+  else if "%event-damagecause%" is "attack":
+    command "/mcqqbot send group %{@group_id}% %player's name% 被一拳打回了床上" by console
+  else if "%event-damagecause%" is "lava":
+    command "/mcqqbot send group %{@group_id}% %player's name% 觉得这温泉不对劲" by console
   else:
-    chance of 50%:
-      command "/mcqqbot send group %{@group_id}% %{_player}% 骂骂咧咧得醒在了主城" by console
-    chance of 50%:
-      command "/mcqqbot send group %{@group_id}% %{_player}% 迷迷糊糊得醒在了主城" by console
-  
+    command "/mcqqbot send group %{@group_id}% %player's name% 因为%event-damagecause%惨叫一声醒在了自己的床上" by console
+
 # 当玩家加入时
 on join:
   {@vanish} contain player's name:
