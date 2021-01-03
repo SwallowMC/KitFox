@@ -43,13 +43,13 @@ on PlayerAdvancementDoneEvent:
   
 on bot join group:
   # 回复群信息
-  if group-code is "%{@group_id}%":
+  if group-code is {@group_id}:
     bot reply "欢迎加入KittenCraft官方交流群！在游玩本服务器前请仔细阅读群公告并牢记玩家守则，审核注册请找frank_7829。"
 
 # 机器人接收离开群
 on bot leave group:
   # 回复群信息
-  if group-code is "%{@group_id}%":
+  if group-code is {@group_id}:
     bot reply "%sender%(%qq%)离开了群聊"
 
 # on death of player:
@@ -204,7 +204,7 @@ on bot message:
         bot reply "本南狐傲娇到不让你执行命令！"     
     {_sub1} start with "version":
       bot reply "本南狐（{@version}）具有超级狐力！"
-  else if group-code is "%{@group_id}%":
+  else if group-code is {@group_id}:
     broadcast "[群聊]<%sender%> %bot message%"
     
 # 接收游戏内玩家聊天
