@@ -20,8 +20,8 @@ options:
   regadmin: "2947665256 1142313554 1833990862 2896515622" # 可操纵注册
   vanish: "SinanGentoo Zerlight" # 隐身名单
   silent-mode: false # 静默模式 开启后不鸟普通玩家
-  group_id: "1043731523"
-  superuser: "2947665256"
+  group_id: 1043731523
+  superuser: 2947665256
 
 import: # 需要引用的java类
   java.lang.String as JavaString
@@ -39,7 +39,7 @@ on PlayerAdvancementDoneEvent:
   {_advancement} contain "recipes/":
     set {_junk} to "神奇语法问题"
   else:
-    command "/mcqqbot send group %{@group_id}% [KittenCraft]%{_player}% 获得了成就[%{_advancement}%]!" by console
+    command "/mcqqbot send group {@group_id} [KittenCraft]%{_player}% 获得了成就[%{_advancement}%]!" by console
   
 on bot join group:
   # 回复群信息
@@ -53,45 +53,45 @@ on bot leave group:
     bot reply "%sender%(%qq%)离开了群聊"
 
 # on death of player:
-#   command "/mcqqbot send group %{@group_id}% %player's name% 惨叫一声醒在了自己的床上" by console
+#   command "/mcqqbot send group {@group_id} %player's name% 惨叫一声醒在了自己的床上" by console
 
 on death of player:
   if "%event-damagecause%" is "void":
-    command "/mcqqbot send group %{@group_id}% %player's name% 被深渊吞噬" by console
+    command "/mcqqbot send group {@group_id} %player's name% 被深渊吞噬" by console
   else if "%event-damagecause%" is "fall":
-    command "/mcqqbot send group %{@group_id}% %player's name% 失足了" by console
+    command "/mcqqbot send group {@group_id} %player's name% 失足了" by console
   else if "%event-damagecause%" is "burning":
-    command "/mcqqbot send group %{@group_id}% %player's name% 火冒三丈（物理）" by console
+    command "/mcqqbot send group {@group_id} %player's name% 火冒三丈（物理）" by console
   else if "%event-damagecause%" is "lightning":
-    command "/mcqqbot send group %{@group_id}%  天空一声巨响，%player's name% 回到了床上" by console
+    command "/mcqqbot send group {@group_id}  天空一声巨响，%player's name% 回到了床上" by console
   else if "%event-damagecause%" is "fire":
-    command "/mcqqbot send group %{@group_id}% 那一刻，%player's name% 成为了光" by console
+    command "/mcqqbot send group {@group_id} 那一刻，%player's name% 成为了光" by console
   else if "%event-damagecause%" is "sweep attack":
-    command "/mcqqbot send group %{@group_id}% %player's name% 猛吸了一口剑气" by console
+    command "/mcqqbot send group {@group_id} %player's name% 猛吸了一口剑气" by console
   else if "%event-damagecause%" is "potion":
-    command "/mcqqbot send group %{@group_id}% 那一刻，%player's name% 成为了白雪公主" by console
+    command "/mcqqbot send group {@group_id} 那一刻，%player's name% 成为了白雪公主" by console
   else if "%event-damagecause%" is "entity explosion":
-    command "/mcqqbot send group %{@group_id}% %player's name% 被干爆了" by console
+    command "/mcqqbot send group {@group_id} %player's name% 被干爆了" by console
   else if "%event-damagecause%" is "attack":
-    command "/mcqqbot send group %{@group_id}% %player's name% 被一拳打回了床上" by console
+    command "/mcqqbot send group {@group_id} %player's name% 被一拳打回了床上" by console
   else if "%event-damagecause%" is "lava":
-    command "/mcqqbot send group %{@group_id}% %player's name% 觉得这温泉不对劲" by console
+    command "/mcqqbot send group {@group_id} %player's name% 觉得这温泉不对劲" by console
   else:
-    command "/mcqqbot send group %{@group_id}% %player's name% 因为%event-damagecause%惨叫一声醒在了自己的床上" by console
+    command "/mcqqbot send group {@group_id} %player's name% 因为%event-damagecause%惨叫一声醒在了自己的床上" by console
 
 # 当玩家加入时
 on join:
   {@vanish} contain player's name:
-    command "/mcqqbot send friend %{@superuser}% %player's name% 加入了游戏" by console
+    command "/mcqqbot send friend {@superuser} %player's name% 加入了游戏" by console
   else:
-    command "/mcqqbot send group %{@group_id}% %player's name% 加入了游戏" by console
+    command "/mcqqbot send group {@group_id} %player's name% 加入了游戏" by console
     
 # 当玩家离开时
 on quit:
   {@vanish} contain player's name:
-    command "/mcqqbot send friend %{@superuser}% %player's name% 离开了游戏" by console
+    command "/mcqqbot send friend {@superuser} %player's name% 离开了游戏" by console
   else:
-    command "/mcqqbot send group %{@group_id}% %player's name% 离开了游戏" by console
+    command "/mcqqbot send group {@group_id} %player's name% 离开了游戏" by console
     
 # 接收群内玩家聊天
 on bot message:
@@ -149,10 +149,10 @@ on bot message:
           command "/authme register %{_username}% %{_password}%" by console
           if AuthMeApi.getInstance().isRegistered({_username}) is false:
             bot reply "注册失败，请检查用户名或密码是否符合规则！"
-            command "/mcqqbot send group %{@group_id}% 管理员%sender%(%qq%)试图注册用户名为%{_username}%的玩家，但是失败了。" by console
+            command "/mcqqbot send group {@group_id} 管理员%sender%(%qq%)试图注册用户名为%{_username}%的玩家，但是失败了。" by console
           else:
             bot reply "该用户名注册成功！"
-            command "/mcqqbot send group %{@group_id}% 管理员%sender%(%qq%)注册了用户名为%{_username}%的玩家。" by console
+            command "/mcqqbot send group {@group_id} 管理员%sender%(%qq%)注册了用户名为%{_username}%的玩家。" by console
         else:
           bot reply "该用户名已被注册！"
       else if {@silent-mode} is false:
@@ -167,7 +167,7 @@ on bot message:
         set {_time} to subtext of {_sub2} from characters length of {_username}+(length of {_reason})+3 to the length of {_sub2}
         set {_time} to the first (index of " " in {_time}-1) characters of {_time}
         command "/tempban %{_username}% %{_time}%d %{_reason}%" by console
-        command "/mcqqbot send group %{@group_id}% 玩家%{_username}%因为%{_reason}%被管理员封禁%{_time}%天，希望各位以此为戒！" by console
+        command "/mcqqbot send group {@group_id} 玩家%{_username}%因为%{_reason}%被管理员封禁%{_time}%天，希望各位以此为戒！" by console
       else if {@silent-mode} is false:
         bot reply "本南狐傲娇到不让你执行命令！"
     {_sub1} start with "maintenance ":
@@ -210,10 +210,10 @@ on bot message:
 # 接收游戏内玩家聊天
 on chat:
 # 执行控制台命令 将信息发送给群
-  command "/mcqqbot send group %{@group_id}% [KittenCraft]%player's name%: %message%" by console
+  command "/mcqqbot send group {@group_id} [KittenCraft]%player's name%: %message%" by console
   
 on load:
-  command "/mcqqbot send friend %{@superuser}% 南狐 已苏醒" by console
+  command "/mcqqbot send friend {@superuser} 南狐 已苏醒" by console
   
 on server start:  
-  command "/mcqqbot send group %{@group_id}% KittenCraft 已苏醒" by console
+  command "/mcqqbot send group {@group_id} KittenCraft 已苏醒" by console
