@@ -85,7 +85,7 @@ on bot message:
         else: 
           bot reply "%{_sub2}%%nl%在线状态：否%nl%权限等级：%{_permission}%"
       else:
-        bot reply "%{_sub2} 未注册"
+        bot reply "%{_sub2}% 未注册"
     {_sub1} start with "info":
       set {_playerList} to placeholder "playerlist_online,normal,yes,list"
       set {_onlinePlayers} to placeholder "server_online"
