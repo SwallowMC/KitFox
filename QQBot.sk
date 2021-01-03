@@ -72,13 +72,15 @@ on bot message:
   bot message start with "!kitten ":
     set {_sub1} to subtext of bot message from characters 9 to the length of bot message
     {_sub1} start with "check ":
-      set {_playerList} to placeholder "playerlist_online,normal,yes,list"
+      set {_playerList} `to placeholder "playerlist_online,normal,yes,list"
       set {_adminList} to placeholder "playerlist_all,perm,yes,list,musicbox.speaker"
       set {_sub2} to subtext of {_sub1} from characters 7 to the length of {_sub1}
       {_adminList} contain {_sub2}:
         set {_permission} to "绒布球"
-      else:
+      else if AuthMeApi.isRegistered({_sub2}) is true:
         set {_permission} to "玩家"
+      else:
+        set {_permission} to "未注册用户"
       {_playerList} contain {_sub2}:
         bot reply "%{_sub2}%%nl%在线状态：是%nl%权限等级：%{_permission}%"
       else: 
