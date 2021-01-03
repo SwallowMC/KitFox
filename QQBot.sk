@@ -79,7 +79,7 @@ on bot message:
         set {_permission} to "绒布球"
       else:
         set {_permission} to "玩家"
-      if AuthMeApi.isRegistered({_sub2}) is true:
+      if AuthMeApi.getInstance().isRegistered({_sub2}) is true:
         {_playerList} contain {_sub2}:
           bot reply "%{_sub2}%%nl%在线状态：是%nl%权限等级：%{_permission}%"
         else: 
