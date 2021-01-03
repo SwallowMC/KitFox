@@ -9,7 +9,7 @@
 # skript-placeholders 1.5
 # AuthMe等登录插件(可选)
 # Maintenance等维护插件(可选)
-# 本脚本的作者是SwallowMC团队的司南(Github:@SinanGentoo)，由司南及开源社区共同维护。如在使用中遇到问题请联系我我发起issue！
+# 本脚本的作者是SwallowMC团队的司南(Github:@SinanGentoo)，由司南及开源社区共同维护。如在使用中遇到问题请联系我或发起issue！
 # =========================
 
 # 一些自定义项
@@ -162,7 +162,7 @@ on bot message:
     {_sub1} start with "reload":
       {@admin} contain qq:
         bot reply "本南狐正在重载~"
-        command "/skript reload QQbot" by console
+        command "/skript reload QQbot.sk" by console
       else if {@silent-mode} is false:
         bot reply "本南狐傲娇到不让你执行命令！"
     {_sub1} start with "backup":
