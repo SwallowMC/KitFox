@@ -1,0 +1,185 @@
+# =========================
+# QQbot.sk
+# 这是一个能使服务器管理员们能通过QQ快速管理服务器的脚本，
+# 目前支持服务器与群聊的双向聊天转发，远程执行指令，开启/关闭维护模式等
+# 在使用本脚本之前，请确保您已经配置完成所需的依赖：
+# Skript 2.4.0以及以上版本
+# McQQbot 1.0.4及以上版本
+# skript-reflect 2.1.0 及以上版本
+# skript-placeholders 1.5
+# AuthMe等登录插件(可选)
+# Maintenance等维护插件(可选)
+# 本脚本的作者是司南(Github:@SinanGentoo)，如在使用中遇到问题请联系我！
+# =========================
+
+# 一些自定义项
+options:
+  version: 1.0-BETA1 # 机器人版本
+  enabled-groups: "" # 机器人响应群聊
+  admin: "2947665256 1142313554 2896515622" # 机器人管理员名单
+  regadmin: "2947665256 1142313554 1833990862 2896515622" # 可操纵注册
+  vanish: "SinanGentoo Zerlight" # 隐身名单
+  silent-mode: false # 静默模式 开启后不鸟普通玩家
+
+import: # 需要引用的java类
+  java.lang.String as JavaString
+  org.bukkit.entity.Player
+  org.bukkit.advancement.Advancement
+  org.bukkit.event.player.PlayerAdvancementDoneEvent
+  org.bukkit.Server
+  fr.xephi.authme.api.v3.AuthMeApi
+  
+# 成就转发  
+on PlayerAdvancementDoneEvent:
+  set {_advancement} to event.getAdvancement().getKey().toString()
+  set {_player} to event.getPlayer().getName()
+  {_advancement} contain "recipes/":
+    set {_junk} to "神奇语法问题"
+  else:
+    command "/mcqqbot send group 1043731523 [KittenCraft]%{_player}% 获得了成就[%{_advancement}%]!" by console
+  
+on bot join group:
+  # 回复群信息
+  if group-code is "1043731523":
+    bot reply "欢迎加入KittenCraft官方交流群！在游玩本服务器前请仔细阅读群公告并牢记玩家守则，审核注册请找frank_7829。"
+
+# 机器人接收离开群
+on bot leave group:
+  # 回复群信息
+  if group-code is "1043731523":
+    bot reply "%sender%(%qq%)离开了群聊"
+  
+on death of player:
+  command "/mcqqbot send group 1043731523 %player's name% 惨叫一声醒在了自己的床上" by console
+  
+# 当玩家加入时
+on join:
+  {@vanish} contain player's name:
+    command "/mcqqbot send friend 2947665256 %player's name% 加入了游戏" by console
+  else:
+    command "/mcqqbot send group 1043731523 %player's name% 加入了游戏" by console
+    
+# 当玩家离开时
+on quit:
+  {@vanish} contain player's name:
+    command "/mcqqbot send friend 2947665256 %player's name% 离开了游戏" by console
+  else:
+    command "/mcqqbot send group 1043731523 %player's name% 离开了游戏" by console
+    
+# 接收群内玩家聊天
+on bot message:
+# 必须为Kitten群里的消息
+  bot message start with "!kitten ":
+    set {_sub1} to subtext of bot message from characters 9 to the length of bot message
+    {_sub1} start with "check ":
+      set {_playerList} to placeholder "playerlist_online,normal,yes,list"
+      set {_adminList} to placeholder "playerlist_all,perm,yes,list,musicbox.speaker"
+      set {_sub2} to subtext of {_sub1} from characters 7 to the length of {_sub1}
+      {_adminList} contain {_sub2}:
+        set {_permission} to "绒布球"
+      else:
+        set {_permission} to "玩家"
+      {_playerList} contain {_sub2}:
+        bot reply "%{_sub2}%%nl%在线状态：是%nl%权限等级：%{_permission}%"
+      else: 
+        bot reply "%{_sub2}%%nl%在线状态：否%nl%权限等级：%{_permission}%"
+    {_sub1} start with "info":
+      set {_playerList} to placeholder "playerlist_online,normal,yes,list"
+      set {_onlinePlayers} to placeholder "server_online"
+      set {_maxPlayers} to placeholder "server_max_players"
+      set {_ramUsed} to placeholder "server_ram_used"
+      set {_TPS} to placeholder "server_tps_5"
+      bot reply "KittenCraft 正常运行中！%nl%人数:%{_onlinePlayers}%/%{_maxPlayers}%%nl%在线玩家：%{_playerList}%%nl%服务器TPS：%{_TPS}%%nl%服务器使用内存：%{_ramUsed}%M"
+    {_sub1} start with "gift":
+      {@admin} contain qq:
+        chance of 70%:
+          command "/give @a stick 8" by console
+          command "/give @r oak_log 2" by console
+        chance of 20%:
+          command "/give @a apple 3" by console
+          command "/give @r golden_apple" by console
+        chance of 10%:
+          command "/give @a pumpkin_pie 8" by console
+          command "/give @r cake" by console
+        bot reply "南狐已经将礼物送到各位背包中了哟~"
+        broadcast "南狐已经将礼物送到各位背包中了哟,请注意查收~"
+      else if {@silent-mode} is false:
+        bot reply "本南狐傲娇到不让你执行命令！"
+    {_sub1} start with "help":
+      if {@admin} contain qq:
+        bot reply "本南狐现在能听懂以下命令：%nl%version    显示南狐的版本号%nl%info    显示服务器状态%nl%maintenance [on/off]    开关服务器维护模式%nl%execute [command]    执行命令%nl%reload    重载机器人%nl%gift    发放小礼物%nl%ban [playername] [_reason] [_time]    封禁一个玩家"
+    {_sub1} start with "reg ":
+      {@regadmin} contain qq:
+        set {_sub2} to subtext of {_sub1} from characters 5 to the length of {_sub1} # reg之后文本
+        set {_username} to {_sub2}
+        set {_username} to the first (index of " " in {_username}-1) characters of {_username}
+        set {_password} to subtext of {_sub2} from characters length of {_username}+2 to the length of {_sub2}
+        set {_password} to the first (index of " " in {_password}-1) characters of {_password}
+        if AuthMeApi.isRegistered({_username}) is false:
+          command "/mcqqbot send group 1043731523 管理员%sender%(%qq%)注册了用户名为%{_username}%的玩家。" by console
+          command "/authme register %{_username}% %{_password}%" by console
+          bot reply "该用户名注册成功！"
+        else:
+          bot reply "该用户名已被注册！"
+      else if {@silent-mode} is false:
+        bot reply "本南狐傲娇到不让你执行命令！"     
+    {_sub1} start with "ban ":
+      {@admin} contain qq:
+        set {_sub2} to subtext of {_sub1} from characters 5 to the length of {_sub1} # ban之后文本
+        set {_username} to {_sub2}
+        set {_username} to the first (index of " " in {_username}-1) characters of {_username}
+        set {_reason} to subtext of {_sub2} from characters length of {_username}+2 to the length of {_sub2}
+        set {_reason} to the first (index of " " in {_reason}-1) characters of {_reason}
+        set {_time} to subtext of {_sub2} from characters length of {_username}+(length of {_reason})+3 to the length of {_sub2}
+        set {_time} to the first (index of " " in {_time}-1) characters of {_time}
+        command "/tempban %{_username}% %{_time}%d %{_reason}%" by console
+        command "/mcqqbot send group 1043731523 玩家%{_username}%因为%{_reason}%被管理员封禁%{_time}%天，希望各位以此为戒！" by console
+      else if {@silent-mode} is false:
+        bot reply "本南狐傲娇到不让你执行命令！"
+    {_sub1} start with "maintenance ":
+      {@admin} contain qq:
+        set {_sub2} to subtext of {_sub1} from characters 13 to the length of {_sub1}
+        if {_sub2} is "on":
+          command "/maintenance on" by console
+          bot reply "服务器现在被本南狐叼走咯~"
+        else if {_sub2} is "off":
+          command "/maintenance off" by console
+          bot reply "服务器现在被本南狐叼回来啦~"
+        else:
+          bot reply "歪比巴卜？"
+      else if {@silent-mode} is false:
+        bot reply "本南狐傲娇到不让你执行命令！"
+    {_sub1} start with "execute ":
+      {@admin} contain qq:
+        set {_sub2} to subtext of {_sub1} from characters 9 to the length of {_sub1}
+        bot reply "本南狐已经将命令发进服务器了哟"
+        command "%{_sub2}%" by console
+      else if {@silent-mode} is false:
+        bot reply "本南狐傲娇到不让你执行命令！"
+    {_sub1} start with "reload":
+      {@admin} contain qq:
+        bot reply "本南狐正在重载~"
+        command "/skript reload QQbot" by console
+      else if {@silent-mode} is false:
+        bot reply "本南狐傲娇到不让你执行命令！"
+    {_sub1} start with "backup":
+      {@admin} contain qq:
+        bot reply "本南狐正在备份服务器……"
+        command "/backup backup" by console
+      else if {@silent-mode} is false:
+        bot reply "本南狐傲娇到不让你执行命令！"     
+    {_sub1} start with "version":
+      bot reply "本南狐（{@version}）具有超级狐力！"
+  else if group-code is "1043731523":
+    broadcast "[群聊]<%sender%> %bot message%"
+    
+# 接收游戏内玩家聊天
+on chat:
+# 执行控制台命令 将信息发送给群
+  command "/mcqqbot send group 1043731523 [KittenCraft]%player's name%: %message%" by console
+  
+on load:
+  command "/mcqqbot send friend 2947665256 南狐 已苏醒" by console
+  
+on server start:  
+  command "/mcqqbot send group 1043731523 KittenCraft 已苏醒" by console
