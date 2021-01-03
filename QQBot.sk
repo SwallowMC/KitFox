@@ -77,14 +77,15 @@ on bot message:
       set {_sub2} to subtext of {_sub1} from characters 7 to the length of {_sub1}
       {_adminList} contain {_sub2}:
         set {_permission} to "绒布球"
-      else if AuthMeApi.isRegistered({_sub2}) is true:
-        set {_permission} to "玩家"
       else:
-        set {_permission} to "未注册用户"
-      {_playerList} contain {_sub2}:
-        bot reply "%{_sub2}%%nl%在线状态：是%nl%权限等级：%{_permission}%"
-      else: 
-        bot reply "%{_sub2}%%nl%在线状态：否%nl%权限等级：%{_permission}%"
+        set {_permission} to "玩家"
+      if AuthMeApi.isRegistered({_sub2}) is true:
+        {_playerList} contain {_sub2}:
+          bot reply "%{_sub2}%%nl%在线状态：是%nl%权限等级：%{_permission}%"
+        else: 
+          bot reply "%{_sub2}%%nl%在线状态：否%nl%权限等级：%{_permission}%"
+      else:
+        bot reply "%{_sub2} 未注册"
     {_sub1} start with "info":
       set {_playerList} to placeholder "playerlist_online,normal,yes,list"
       set {_onlinePlayers} to placeholder "server_online"
