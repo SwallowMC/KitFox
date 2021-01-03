@@ -136,7 +136,7 @@ on bot message:
         if AuthMeApi.getInstance().isRegistered({_username}) is false:
           command "/authme register %{_username}% %{_password}%" by console
           if AuthMeApi.getInstance().isRegistered({_username}) is false:
-            bot replay "注册失败，请检查用户名或密码是否符合规则！"
+            bot reply "注册失败，请检查用户名或密码是否符合规则！"
             command "/mcqqbot send group %{@group_id}% 管理员%sender%(%qq%)试图注册用户名为%{_username}%的玩家，但是失败了。" by console
           else:
             bot reply "该用户名注册成功！"
