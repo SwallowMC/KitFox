@@ -193,7 +193,7 @@ on bot message:
     {_sub1} start with "reload":
       {@admin} contain qq:
         bot reply "本南狐正在重载~"
-        command "/skript reload QQbot.sk" by console
+        command "/skript reload QQBot.sk" by console
       else if {@silent-mode} is false:
         bot reply "本南狐傲娇到不让你执行命令！"
     {_sub1} start with "backup":
