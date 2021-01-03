@@ -118,7 +118,7 @@ on bot message:
         set {_username} to the first (index of " " in {_username}-1) characters of {_username}
         set {_password} to subtext of {_sub2} from characters length of {_username}+2 to the length of {_sub2}
         set {_password} to the first (index of " " in {_password}-1) characters of {_password}
-        if AuthMeApi.isRegistered({_username}) is false:
+        if AuthMeApi.getInstance().isRegistered({_username}) is false:
           command "/mcqqbot send group 1043731523 管理员%sender%(%qq%)注册了用户名为%{_username}%的玩家。" by console
           command "/authme register %{_username}% %{_password}%" by console
           bot reply "该用户名注册成功！"
