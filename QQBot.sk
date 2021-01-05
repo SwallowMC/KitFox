@@ -204,7 +204,7 @@ on bot message:
         bot reply "本南狐傲娇到不让你执行命令！"     
     {_sub1} start with "version":
       bot reply "本南狐（%{options.version}%）具有超级狐力！"
-  else if group-code is "{options.group_id}":
+  else if group-code is "%{options.group_id}%":
     broadcast "[群聊]<%sender%> %bot message%"
     
 # 接收游戏内玩家聊天
