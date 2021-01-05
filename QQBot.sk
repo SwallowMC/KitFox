@@ -7,6 +7,7 @@
 # McQQbot 1.0.4及以上版本
 # skript-reflect 2.1.0 及以上版本
 # skript-placeholders 1.5
+# skUtilities 0.9.2
 # AuthMe等登录插件(可选)
 # Maintenance等维护插件(可选)
 # 本脚本的作者是SwallowMC团队的司南(Github:@SinanGentoo)，由司南及开源社区共同维护。如在使用中遇到问题请联系我或发起issue！
@@ -14,14 +15,7 @@
 
 # 一些自定义项
 options:
-  version: 1.0-BETA1 # 机器人版本
-  enabled-groups: "" # 机器人响应群聊
-  admin: "2947665256 1142313554 2896515622" # 机器人管理员名单
-  regadmin: "2947665256 1142313554 1833990862 2896515622" # 可操纵注册
-  vanish: "SinanGentoo Zerlight" # 隐身名单
-  silent-mode: false # 静默模式 开启后不鸟普通玩家
-  group_id: 1043731523
-  superuser: 2947665256
+  config: "plugins/KitFox/config.yml" # 配置文件路径
 
 import: # 需要引用的java类
   java.lang.String as JavaString
@@ -39,17 +33,17 @@ on PlayerAdvancementDoneEvent:
   {_advancement} contain "recipes/":
     set {_junk} to "神奇语法问题"
   else:
-    command "/mcqqbot send group {@group_id} [KittenCraft]%{_player}% 获得了成就[%{_advancement}%]!" by console
+    command "/mcqqbot send group %{options.group_id}% [KittenCraft]%{_player}% 获得了成就[%{_advancement}%]!" by console
   
 on bot join group:
   # 回复群信息
-  if group-code is "{@group_id}":
+  if group-code is "%{options.group_id}%":
     bot reply "欢迎加入KittenCraft官方交流群！在游玩本服务器前请仔细阅读群公告并牢记玩家守则，审核注册请找frank_7829。"
 
 # 机器人接收离开群
 on bot leave group:
   # 回复群信息
-  if group-code is "{@group_id}":
+  if group-code is "%{options.group_id}%":
     bot reply "%sender%(%qq%)离开了群聊"
 
 # on death of player:
@@ -57,41 +51,41 @@ on bot leave group:
 
 on death of player:
   if "%event-damagecause%" is "void":
-    command "/mcqqbot send group {@group_id} %player's name% 被深渊吞噬" by console
+    command "/mcqqbot send group %{options.group_id}% %player's name% 被深渊吞噬" by console
   else if "%event-damagecause%" is "fall":
-    command "/mcqqbot send group {@group_id} %player's name% 失足了" by console
+    command "/mcqqbot send group %{options.group_id}% %player's name% 失足了" by console
   else if "%event-damagecause%" is "burning":
-    command "/mcqqbot send group {@group_id} %player's name% 火冒三丈（物理）" by console
+    command "/mcqqbot send group %{options.group_id}% %player's name% 火冒三丈（物理）" by console
   else if "%event-damagecause%" is "lightning":
-    command "/mcqqbot send group {@group_id}  天空一声巨响，%player's name% 回到了床上" by console
+    command "/mcqqbot send group %{options.group_id}%  天空一声巨响，%player's name% 回到了床上" by console
   else if "%event-damagecause%" is "fire":
-    command "/mcqqbot send group {@group_id} 那一刻，%player's name% 成为了光" by console
+    command "/mcqqbot send group %{options.group_id}% 那一刻，%player's name% 成为了光" by console
   else if "%event-damagecause%" is "sweep attack":
-    command "/mcqqbot send group {@group_id} %player's name% 猛吸了一口剑气" by console
+    command "/mcqqbot send group %{options.group_id}% %player's name% 猛吸了一口剑气" by console
   else if "%event-damagecause%" is "potion":
-    command "/mcqqbot send group {@group_id} 那一刻，%player's name% 成为了白雪公主" by console
+    command "/mcqqbot send group {options.group_id} 那一刻，%player's name% 成为了白雪公主" by console
   else if "%event-damagecause%" is "entity explosion":
-    command "/mcqqbot send group {@group_id} %player's name% 被干爆了" by console
+    command "/mcqqbot send group %{options.group_id}% %player's name% 被干爆了" by console
   else if "%event-damagecause%" is "attack":
-    command "/mcqqbot send group {@group_id} %player's name% 被一拳打回了床上" by console
+    command "/mcqqbot send group %{options.group_id}% %player's name% 被一拳打回了床上" by console
   else if "%event-damagecause%" is "lava":
-    command "/mcqqbot send group {@group_id} %player's name% 觉得这温泉不对劲" by console
+    command "/mcqqbot send group %{options.group_id}% %player's name% 觉得这温泉不对劲" by console
   else:
-    command "/mcqqbot send group {@group_id} %player's name% 因为%event-damagecause%惨叫一声醒在了自己的床上" by console
+    command "/mcqqbot send group %{options.group_id}% %player's name% 因为%event-damagecause%惨叫一声醒在了自己的床上" by console
 
 # 当玩家加入时
 on join:
-  {@vanish} contain player's name:
-    command "/mcqqbot send friend {@superuser} %player's name% 加入了游戏" by console
+  {options.vanish} contain player's name:
+    command "/mcqqbot send friend %{options.superuser}% %player's name% 加入了游戏" by console
   else:
-    command "/mcqqbot send group {@group_id} %player's name% 加入了游戏" by console
+    command "/mcqqbot send group %{options.group_id}% %player's name% 加入了游戏" by console
     
 # 当玩家离开时
 on quit:
-  {@vanish} contain player's name:
-    command "/mcqqbot send friend {@superuser} %player's name% 离开了游戏" by console
+  {options.vanish} contain player's name:
+    command "/mcqqbot send friend %{options.superuser}% %player's name% 离开了游戏" by console
   else:
-    command "/mcqqbot send group {@group_id} %player's name% 离开了游戏" by console
+    command "/mcqqbot send group %{options.group_id}% %player's name% 离开了游戏" by console
     
 # 接收群内玩家聊天
 on bot message:
@@ -121,7 +115,7 @@ on bot message:
       set {_TPS} to placeholder "server_tps_5"
       bot reply "KittenCraft 正常运行中！%nl%人数:%{_onlinePlayers}%/%{_maxPlayers}%%nl%在线玩家：%{_playerList}%%nl%服务器TPS：%{_TPS}%%nl%服务器使用内存：%{_ramUsed}%M"
     {_sub1} start with "gift":
-      {@admin} contain qq:
+      {options.admin} contain qq:
         chance of 70%:
           command "/give @a stick 8" by console
           command "/give @r oak_log 2" by console
@@ -133,13 +127,13 @@ on bot message:
           command "/give @r cake" by console
         bot reply "南狐已经将礼物送到各位背包中了哟~"
         broadcast "南狐已经将礼物送到各位背包中了哟,请注意查收~"
-      else if {@silent-mode} is false:
+      else if {options.silent-mode} is false:
         bot reply "本南狐傲娇到不让你执行命令！"
     {_sub1} start with "help":
-      if {@admin} contain qq:
+      if {options.admin} contain qq:
         bot reply "本南狐现在能听懂以下命令：%nl%version    显示南狐的版本号%nl%info    显示服务器状态%nl%maintenance [on/off]    开关服务器维护模式%nl%execute [command]    执行命令%nl%reload    重载机器人%nl%gift    发放小礼物%nl%ban [playername] [_reason] [_time]    封禁一个玩家"
     {_sub1} start with "reg ":
-      {@regadmin} contain qq:
+      {options.regadmin} contain qq:
         set {_sub2} to subtext of {_sub1} from characters 5 to the length of {_sub1} # reg之后文本
         set {_username} to {_sub2}
         set {_username} to the first (index of " " in {_username}-1) characters of {_username}
@@ -149,16 +143,16 @@ on bot message:
           command "/authme register %{_username}% %{_password}%" by console
           if AuthMeApi.getInstance().isRegistered({_username}) is false:
             bot reply "注册失败，请检查用户名或密码是否符合规则！"
-            command "/mcqqbot send group {@group_id} 管理员%sender%(%qq%)试图注册用户名为%{_username}%的玩家，但是失败了。" by console
+            command "/mcqqbot send group {options.group_id} 管理员%sender%(%qq%)试图注册用户名为%{_username}%的玩家，但是失败了。" by console
           else:
             bot reply "该用户名注册成功！"
-            command "/mcqqbot send group {@group_id} 管理员%sender%(%qq%)注册了用户名为%{_username}%的玩家。" by console
+            command "/mcqqbot send group {options.group_id} 管理员%sender%(%qq%)注册了用户名为%{_username}%的玩家。" by console
         else:
           bot reply "该用户名已被注册！"
-      else if {@silent-mode} is false:
+      else if {options.silent-mode} is false:
         bot reply "本南狐傲娇到不让你执行命令！"     
     {_sub1} start with "ban ":
-      {@admin} contain qq:
+      {options.admin} contain qq:
         set {_sub2} to subtext of {_sub1} from characters 5 to the length of {_sub1} # ban之后文本
         set {_username} to {_sub2}
         set {_username} to the first (index of " " in {_username}-1) characters of {_username}
@@ -167,11 +161,11 @@ on bot message:
         set {_time} to subtext of {_sub2} from characters length of {_username}+(length of {_reason})+3 to the length of {_sub2}
         set {_time} to the first (index of " " in {_time}-1) characters of {_time}
         command "/tempban %{_username}% %{_time}%d %{_reason}%" by console
-        command "/mcqqbot send group {@group_id} 玩家%{_username}%因为%{_reason}%被管理员封禁%{_time}%天，希望各位以此为戒！" by console
-      else if {@silent-mode} is false:
+        command "/mcqqbot send group {options.group_id} 玩家%{_username}%因为%{_reason}%被管理员封禁%{_time}%天，希望各位以此为戒！" by console
+      else if {options.silent-mode} is false:
         bot reply "本南狐傲娇到不让你执行命令！"
     {_sub1} start with "maintenance ":
-      {@admin} contain qq:
+      {options.admin} contain qq:
         set {_sub2} to subtext of {_sub1} from characters 13 to the length of {_sub1}
         if {_sub2} is "on":
           command "/maintenance on" by console
@@ -181,39 +175,84 @@ on bot message:
           bot reply "服务器现在被本南狐叼回来啦~"
         else:
           bot reply "歪比巴卜？"
-      else if {@silent-mode} is false:
+      else if {options.silent-mode} is false:
         bot reply "本南狐傲娇到不让你执行命令！"
     {_sub1} start with "execute ":
-      {@admin} contain qq:
+      {options.admin} contain qq:
         set {_sub2} to subtext of {_sub1} from characters 9 to the length of {_sub1}
         bot reply "本南狐已经将命令发进服务器了哟"
         command "%{_sub2}%" by console
-      else if {@silent-mode} is false:
+      else if {options.silent-mode} is false:
         bot reply "本南狐傲娇到不让你执行命令！"
     {_sub1} start with "reload":
-      {@admin} contain qq:
+      {options.admin} contain qq:
         bot reply "本南狐正在重载~"
         command "/skript reload QQBot.sk" by console
-      else if {@silent-mode} is false:
+      else if {options.silent-mode} is false:
+        bot reply "本南狐傲娇到不让你执行命令！"
+    {_sub1} start with "reloadconfig":
+      {options.admin} contain qq:
+        bot reply "本南狐配置文件正在重载~"
+        set {options} to yml value "options" from file "plugins/KitFox/config.yml"
+      else if {options.silent-mode} is false:
         bot reply "本南狐傲娇到不让你执行命令！"
     {_sub1} start with "backup":
-      {@admin} contain qq:
+      {options.admin} contain qq:
         bot reply "本南狐正在备份服务器……"
         command "/backup backup" by console
-      else if {@silent-mode} is false:
+      else if {options.silent-mode} is false:
         bot reply "本南狐傲娇到不让你执行命令！"     
     {_sub1} start with "version":
-      bot reply "本南狐（{@version}）具有超级狐力！"
-  else if group-code is "{@group_id}":
+      bot reply "本南狐（%{options.version}%）具有超级狐力！"
+  else if group-code is "{options.group_id}":
     broadcast "[群聊]<%sender%> %bot message%"
     
 # 接收游戏内玩家聊天
 on chat:
 # 执行控制台命令 将信息发送给群
-  command "/mcqqbot send group {@group_id} [KittenCraft]%player's name%: %message%" by console
+  command "/mcqqbot send group %{options.group_id}% [KittenCraft]%player's name%: %message%" by console
   
 on load:
-  command "/mcqqbot send friend {@superuser} 南狐 已苏醒" by console
+  if file {@config} exists:
+    message "本南狐正在加载配置文件中~" to console
+  else:
+    message "本南狐没有找到配置文件呢，不过不用担心，我会创建一个哒" to console
+    createConfig()
+  getConfig()
+  message "%{options.version}% %{options.superuser}% %{options.admin}%" to console
+  command "/mcqqbot send friend %{options.superuser}% 南狐 已苏醒" by console
   
 on server start:  
-  command "/mcqqbot send group {@group_id} KittenCraft 已苏醒" by console
+  command "/mcqqbot send group %{options.group_id}% KittenCraft 已苏醒" by console
+
+# 创建配置文件
+function createConfig(config: string = {@config}) :: string:
+    create file {_config}
+    set yml value "options.version" from file {_config} to "1.0-BETA1"
+    set yml value "options.admin" from file {_config} to ""
+    add 2947665256 to yaml list "options.admin" from file {_config}
+    add 1142313554 to yaml list "options.admin" from file {_config}
+    add 2896515622 to yaml list "options.admin" from file {_config}
+    set yml value "options.regadmin" from file {_config} to ""
+    add 2947665256 to yaml list "options.regadmin" from file {_config}
+    add 1142313554 to yaml list "options.regadmin" from file {_config}
+    add 2896515622 to yaml list "options.regadmin" from file {_config}
+    add 1833990862 to yaml list "options.regadmin" from file {_config}
+    set yml value "options.vanish" from file {_config} to ""
+    add "SinanGentoo" to yaml list "options.vanish" from file {_config}
+    add "Zerlight" to yaml list "options.vanish" from file {_config}
+    set yml value "options.silent-mode" from file {_config} to false
+    set yml value "options.group_id" from file {_config} to 1043731523
+    set yml value "options.superuser" from file {_config} to 2947665256
+    return ""
+
+
+# 获得配置文件
+function getConfig(config: string = {@config}) :: string:
+  set {options.version} to yml value "options.version" from file {_config}
+  set {options.admin} to yml value "options.admin" from file {_config}
+  set {options.regadmin} to yml value "options.regadmin" from file {_config}
+  set {options.vanish} to yml value "options.vanish" from file {_config}
+  set {options.silent-mode} to yml value "options.silent-mode" from file {_config}
+  set {options.group_id} to yml value "options.group_id" from file {_config}
+  return ""

@@ -1,0 +1,17 @@
+options:
+  version: 1.0-BETA1 # 机器人版本
+  admin: # 机器人管理员名单
+  - 2947665256
+  - 1142313554
+  - 2896515622
+  regadmin: # 可操控注册
+  - 2947665256
+  - 1142313554
+  - 2896515622
+  - 1833990862
+  vanish: # 隐身名单
+  - SinanGentoo
+  - Zerlight
+  silent-mode: false # 静默模式 开启后不鸟普通玩家
+  group_id: 1043731523
+  superuser: 2947665256
