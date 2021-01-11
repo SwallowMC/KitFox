@@ -1,22 +1,57 @@
-# =========================
-# QQbot.sk
-# 这是一个能使服务器管理员们能通过QQ快速管理服务器的脚本，
-# 目前支持服务器与群聊的双向聊天转发，远程执行指令，开启/关闭维护模式等
-# 在使用本脚本之前，请确保您已经配置完成所需的依赖：
-# Skript 2.4.0以及以上版本
-# McQQbot 1.0.4及以上版本
-# skript-reflect 2.1.0 及以上版本
-# skript-placeholders 1.5
-# skUtilities 0.9.2
-# AuthMe等登录插件(可选)
-# Maintenance等维护插件(可选)
-# 本脚本的作者是SwallowMC团队的司南(Github:@SinanGentoo)，由司南及开源社区共同维护。如在使用中遇到问题请联系我或发起issue！
-# =========================
-
+# KitFox.sk
+# Description:
+# Operators can use this script to connect
+# their QQ group with Minecraft servers
+#
+# Dependencies:
+# Skript 2.4.0 *
+# MCQQbot 1.0.4 *
+# skript-reflect 2.1.0 * 
+# skript-placeholders 1.5 *
+# AuthMe 5.6.0-SNAPSHOT *
+# Maintenance
+#
+# Copyright:
+# The author of this script is the SwallowMC team,
+# and is mainly maintained by SinanGentoo and the 
+# open source community. If you face issues during
+# use, please contact us or make an issue!
+# --------------------------------------------
 # 一些自定义项
 options:
   config: "plugins/KitFox/config.yml" # 配置文件路径
+function createConfig():
+  set {_configPath} to "plugins/KitFox/config.yml"
+  set {_example::lucky} to 114514
+  set {_example::lol} to 1919810
+  load yml {_configPath} as {_configPath}
+  
+  set yml value "chat-forward" from {_configPath} to true
+  set yml value "op-vanish" from {_configPath} to true
+  set yml value "silent-mode" from {_configPath} to false
+  set yml value "debug-mode" from {_configPath} to false
+  set yml list "admin" from {_configPath} to {_example::*}
+  set yml list "helper" from {_configPath} to {_example::*}
+  
+  save yml {_configPath}
 
+function getConfigValue(name: text) :: text:
+  set {_configPath} to "plugins/KitFox/config.yml"
+  load yml {_configPath} as {_configPath}
+  set {_result} to yml value {_name} from {_configPath}
+  return {_result}
+
+function parseArg(fullcmd: text ,argpos: integer) :: text:
+  set {_subtext} to {_fullcmd} 
+  loop {_argpos} times: # locate the argument's position
+    set {_tpos} to index of " " in {_subtext}
+    set {_subtext} to subtext of {_subtext} from characters {_tpos}+1 to the length of {_subtext}
+  set {_endpos} to index of " " in {_subtext} # locate the argument's position
+  if {_endpos} is -1: # It's end of the full command?
+    set {_arg} to {_subtext}
+  else:
+    set {_arg} to subtext of {_subtext} from characters 0 to {_endpos}-1
+  return {_arg}
 import: # 需要引用的java类
   java.lang.String as JavaString
   org.bukkit.entity.Player
@@ -213,46 +248,16 @@ on chat:
   command "/mcqqbot send group %{options.group_id}% [KittenCraft]%player's name%: %message%" by console
   
 on load:
-  if file {@config} exists:
-    message "本南狐正在加载配置文件中~" to console
-  else:
-    message "本南狐没有找到配置文件呢，不过不用担心，我会创建一个哒" to console
+  message "[KitFox] 南狐(版本：1.0-DEBUG1)启动中……" to console
+  set {_configPath} to "plugins/KitFox/config.yml"
+  if yml file {_configPath} exists:
+    load yml {_configPath} as {_configPath}
+    message "[KitFox] 正在读取配置……" to console
+  else:  
+    message "[KitFox] 未找到配置，不过南狐会帮你创建一个哒！" to console
     createConfig()
-  getConfig()
-  message "%{options.version}% %{options.superuser}% %{options.admin}%" to console
+  # message "%{options.version}% %{options.superuser}% %{options.admin}%" to console
   command "/mcqqbot send friend %{options.superuser}% 南狐 已苏醒" by console
   
 on server start:  
   command "/mcqqbot send group %{options.group_id}% KittenCraft 已苏醒" by console
-
-# 创建配置文件
-function createConfig(config: string = {@config}) :: string:
-    create file {_config}
-    set yml value "options.version" from file {_config} to "1.0-BETA1"
-    set yml value "options.admin" from file {_config} to ""
-    add 2947665256 to yaml list "options.admin" from file {_config}
-    add 1142313554 to yaml list "options.admin" from file {_config}
-    add 2896515622 to yaml list "options.admin" from file {_config}
-    set yml value "options.regadmin" from file {_config} to ""
-    add 2947665256 to yaml list "options.regadmin" from file {_config}
-    add 1142313554 to yaml list "options.regadmin" from file {_config}
-    add 2896515622 to yaml list "options.regadmin" from file {_config}
-    add 1833990862 to yaml list "options.regadmin" from file {_config}
-    set yml value "options.vanish" from file {_config} to ""
-    add "SinanGentoo" to yaml list "options.vanish" from file {_config}
-    add "Zerlight" to yaml list "options.vanish" from file {_config}
-    set yml value "options.silent-mode" from file {_config} to false
-    set yml value "options.group_id" from file {_config} to 1043731523
-    set yml value "options.superuser" from file {_config} to 2947665256
-    return ""
-
-
-# 获得配置文件
-function getConfig(config: string = {@config}) :: string:
-  set {options.version} to yml value "options.version" from file {_config}
-  set {options.admin} to yml value "options.admin" from file {_config}
-  set {options.regadmin} to yml value "options.regadmin" from file {_config}
-  set {options.vanish} to yml value "options.vanish" from file {_config}
-  set {options.silent-mode} to yml value "options.silent-mode" from file {_config}
-  set {options.group_id} to yml value "options.group_id" from file {_config}
-  return ""
