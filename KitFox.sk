@@ -13,6 +13,13 @@
 # 仓库里提issue！（当然，我们更喜欢Pull request XD）
 # --------------------------------------------
 
+import: # 需要引用的java类
+  java.lang.String as JavaString
+  org.bukkit.entity.Player
+  org.bukkit.advancement.Advancement
+  org.bukkit.event.player.PlayerAdvancementDoneEvent
+  fr.xephi.authme.api.v3.AuthMeApi
+  
 function createConfig():
   set {_configPath} to "plugins/KitFox/config.yml"
   set {_example::Example} to 114514
@@ -39,6 +46,16 @@ function getConfigValue(name: text) :: text:
   
 function sendMessage(type: text ,id: text ,message: text):
   command "/mcqqbot send %{_type}% %{_id}% %{_message}%" by console
+
+function checkPermission(code: text ,type: text) :: boolean:
+  set {_configPath} to "plugins/KitFox/config.yml"
+  load yml {_configPath} as {_configPath}
+  set {_template::*} to yml list {_type} from {_configPath}
+  loop {_template::*}:
+    if {_code} is "%loop-value%":
+      return true
+  unload yml {_configPath}
+  return false
 
 function parseArg(fullcmd: text ,argpos: integer) :: text:
   set {_subtext} to {_fullcmd} 
@@ -94,15 +111,23 @@ on server start:
 on server stop:
   set {_groupid} to getConfigValue("main-group")
   sendMessage("group","%{_groupid}%","KittenCraft 麻了")  
-  
-# 当机器人收到消息时  
+
+# 当机器人收到消息时(命令执行部分)
+on bot message:
+  if checkPermission(group-code,"enabled-groups") is true: # 群聊隔离
+    if bot message is "给我变":
+      if checkPermission(qq,"admin") is true: # 权限检测
+        bot reply "这就变"
+        command "/skript reload KitFox.sk" by console
+      else:
+        bot reply "你说变就变，本南狐岂不是很没有面子？"
+      
+# 当机器人收到消息时（群聊消息转发部分）
 on bot message:
   set {_groupid} to getConfigValue("main-group") # 读取主群群号
   set {_cf} to getConfigValue("chat-forward")
+  
   if group-code is "%{_groupid}%":
-    # 调试用
-    if bot message is "给我变":
-      command "/skript reload KitFox.sk" by console
     if {_cf} is "true":
       broadcast "[群聊]<%sender%> %bot message%"
       
@@ -112,3 +137,4 @@ on chat:
   set {_cf} to getConfigValue("chat-forward")
   if {_cf} is "true":
     sendMessage("group","%{_groupid}%","[KittenCraft]%player's name%: %message%")
+      
