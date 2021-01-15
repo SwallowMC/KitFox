@@ -5,7 +5,8 @@
 # skript-yaml 1.3.2*
 # skript-reflect 2.1.0 * 
 # skript-placeholders 1.5 *
-# AuthMe 5.6.0-SNAPSHOT *
+# AdvancementTranslate 1.0 *(请从SwallowMC的Github仓库下载)
+# AuthMe 5.6.0-SNAPSHOT 
 # Maintenance
 #
 # 本skript由SwallowMC团队编写并由SinanGentoo主要维护；
@@ -13,6 +14,9 @@
 # 仓库里提issue！（当然，我们更喜欢Pull request XD）
 # --------------------------------------------
 
+options:
+  version: 1.0-BETA2
+  
 import: # 需要引用的java类
   java.lang.String as JavaString
   org.bukkit.entity.Player
@@ -43,11 +47,18 @@ function getConfigValue(name: text) :: text:
   set {_result} to yml value {_name} from {_configPath}
   unload yml {_configPath}
   return "%{_result}%"
-  
+
+function getConfigList(name: text) :: objects:
+  set {_configPath} to "plugins/KitFox/config.yml"
+  load yml {_configPath} as {_configPath}
+  set {_result::*} to yml list {_name} from {_configPath}
+  unload yml {_configPath}
+  return {_result::*}
+
 function sendMessage(type: text ,id: text ,message: text):
   command "/mcqqbot send %{_type}% %{_id}% %{_message}%" by console
 
-function checkPermission(code: text ,type: text) :: boolean:
+function isInList(code: text ,type: text) :: boolean:
   set {_configPath} to "plugins/KitFox/config.yml"
   load yml {_configPath} as {_configPath}
   set {_template::*} to yml list {_type} from {_configPath}
@@ -56,47 +67,29 @@ function checkPermission(code: text ,type: text) :: boolean:
       return true
   unload yml {_configPath}
   return false
-
-function parseArg(fullcmd: text ,argpos: integer) :: text:
-  set {_subtext} to {_fullcmd} 
-  loop {_argpos} times: # locate the argument's position
-    set {_tpos} to index of " " in {_subtext}
-    set {_subtext} to subtext of {_subtext} from characters {_tpos}+1 to the length of {_subtext}
-  set {_endpos} to index of " " in {_subtext} # locate the argument's position
-  if {_endpos} is -1: # It's end of the full command?
-    set {_arg} to {_subtext}
+  
+function isResponsable(group-code: text) :: boolean:
+  if {_group-code} is "<none>":
+    return true
+  else if isInList({_group-code},"enabled-groups") is true:
+    return true
   else:
-    set {_arg} to subtext of {_subtext} from characters 0 to {_endpos}-1
-  return {_arg}
-
-function countArg(fullcmd: text) :: number:
-  set {_subtext} to {_fullcmd}
-  set {_count} to 0
-  loop length of {_subtext} times: # count
-    set {_tpos} to index of " " in {_subtext}
-    if {_tpos} is -1:
-      stop
-    else:
-      set {_count} to {_count}+1
-      set {_subtext} to subtext of {_subtext} from characters {_tpos}+1 to the length of {_subtext}
-  return {_count}
+    return false
   
 # --------------------------------------------
 
 # 当脚本被启动时
 on load:
-  message "[KitFox] 南狐(版本：1.0-BETA2)启动中……" to console
+  message "[KitFox] 南狐(版本：{@version})启动中……" to console
   set {_configPath} to "plugins/KitFox/config.yml"
   if yml file {_configPath} exists: # 检测配置文件是否存在
     message "[KitFox] 配置文件加载成功！" to console
   else:
     message "[KitFox] 没有找到配置文件呢…不过南狐会帮你创建一个哒！" to console
     createConfig()
-  load yml {_configPath} as {_configPath}
-  set {_admin::*} to yml list "admin" from {_configPath}
+  set {_admin::*} to getConfigList("admin")
   loop {_admin::*}:
     sendMessage("friend","%loop-value%","南狐 已苏醒")
-  unload yml {_configPath}
   
 # 当脚本被关闭时  
 on unload:
@@ -114,13 +107,17 @@ on server stop:
 
 # 当机器人收到消息时(命令执行部分)
 on bot message:
-  if checkPermission(group-code,"enabled-groups") is true: # 群聊隔离
-    if bot message is "给我变":
-      if checkPermission(qq,"admin") is true: # 权限检测
-        bot reply "这就变"
-        command "/skript reload KitFox.sk" by console
-      else:
-        bot reply "你说变就变，本南狐岂不是很没有面子？"
+  if isResponsable("%group-code%") is true: # 群聊隔离
+    set {_argument::*} to bot message split by " " # 指令分割
+    if {_argument::1} is "!fox":
+      if {_argument::2} is "version":
+        bot reply "本南狐(版本：{@version})具有超级狐力！"
+      if {_argument::2} is "reload":
+        if isInList(qq,"admin") is true:
+          bot reply "南狐正在重载~"
+          reload skript "KitFox"
+        else:
+          bot reply "本南狐傲娇到不让你执行命令！"
       
 # 当机器人收到消息时（群聊消息转发部分）
 on bot message:
@@ -137,4 +134,14 @@ on chat:
   set {_cf} to getConfigValue("chat-forward")
   if {_cf} is "true":
     sendMessage("group","%{_groupid}%","[KittenCraft]%player's name%: %message%")
-      
+
+# 当玩家完成某个成就时    
+on PlayerAdvancementDoneEvent:
+  set {_groupid} to getConfigValue("main-group")
+  set {_advancement} to event.getAdvancement().getKey().toString()
+  set {_player} to event.getPlayer().getName()
+  {_advancement} contain "recipes/":
+    stop
+  else:
+    set {_advancementStr} to placeholder "AdvancementTranslate_%{_advancement}%"
+    sendMessage("group","%{_groupid}%","玩家%{_player}%获得了成就 [%{_advancementStr}%]")
