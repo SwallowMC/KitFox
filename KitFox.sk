@@ -15,13 +15,19 @@
 # --------------------------------------------
 
 options:
-  version: 1.0-BETA2
+  version: 1.0-BETA3-final
   
 import: # 需要引用的java类
   java.lang.String as JavaString
+  org.bukkit.Raid
+  org.bukkit.Location
   org.bukkit.entity.Player
   org.bukkit.advancement.Advancement
+  org.bukkit.event.world.WorldEvent
   org.bukkit.event.player.PlayerAdvancementDoneEvent
+  org.bukkit.event.raid.RaidEvent
+  org.bukkit.event.raid.RaidTriggerEvent as raid
+  org.bukkit.event.raid.RaidFinishEvent as victory
   fr.xephi.authme.api.v3.AuthMeApi
   
 function createConfig():
@@ -67,7 +73,13 @@ function isInList(code: text ,type: text) :: boolean:
       return true
   unload yml {_configPath}
   return false
-  
+
+function linkText(textCollection: objects) :: text:
+  set {_result} to ""
+  loop {_textCollection::*}:
+    set {_result} to "%{_result}%%loop-value%"
+  return "%{_result}%"
+ 
 function isResponsable(group-code: text) :: boolean:
   if {_group-code} is "<none>":
     return true
@@ -103,45 +115,220 @@ on server start:
 # 当服务器关闭时
 on server stop:
   set {_groupid} to getConfigValue("main-group")
-  sendMessage("group","%{_groupid}%","KittenCraft 麻了")  
+  sendMessage("group","%{_groupid}%","KittenCraft 麻了")
 
 # 当机器人收到消息时(命令执行部分)
 on bot message:
+  set {_groupid} to getConfigValue("main-group")
   if isResponsable("%group-code%") is true: # 群聊隔离
     set {_argument::*} to bot message split by " " # 指令分割
-    if {_argument::1} is "!fox":
+    if {_argument::1} is "!fox": #命令前缀
+    # 核心指令：
       if {_argument::2} is "version":
         bot reply "本南狐(版本：{@version})具有超级狐力！"
+      if {_argument::2} is "help":
+        set {_helptext::0} to "南狐现在能听懂以下命令：%nl%"
+        set {_helptext::1} to "version    显示南狐版本号%nl%"
+        set {_helptext::2} to "help     显示南狐可用指令%nl%"
+        set {_helptext::3} to "reload    重载南狐%nl%"
+        set {_helptext::4} to "info     显示服务器状态%nl%"
+        set {_helptext::5} to "stop     关闭服务器%nl%"
+        set {_helptext::6} to "execute   [command]  隔空发送指令%nl%"
+        set {_helptext::7} to "reg [username] [pass] 注册玩家%nl%"
+        set {_helptext::8} to "ban [username] [time] [reason] 封禁玩家%nl%"
+        set {_helptext::9} to "maintenance <on/off>  维护模式%nl%"
+        set {_helptext::10} to "broadcast [message]  你吼辣么大声干什么啊"
+        
+        set {_result} to linkText({_helptext::*})
+        bot reply "%{_result}%"
       if {_argument::2} is "reload":
-        if isInList(qq,"admin") is true:
+        if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
           bot reply "南狐正在重载~"
+          wait 1 second #避免报错
           reload skript "KitFox"
         else:
           bot reply "本南狐傲娇到不让你执行命令！"
+    # 基本指令
+      if {_argument::2} is "ban":
+        if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
+          command "/tempban %{_argument::3}% %{_argument::4}%d %{_argument::5}%" by console
+          bot reply "封禁成功！"
+          sendMessage("group","%{_groupid}%","玩家%{_argument::3}%因为%{_argument::4}%被管理员封禁%{_argument::5}%天，希望各位以此为戒！")
+        else:
+          bot reply "本南狐傲娇到不让你执行命令！"
+      if {_argument::2} is "reg":
+        if isInList(qq,"helper") is true:# 检测指令发送者是否有执行权限
+          if AuthMeApi.getInstance().isRegistered({_argument::2}) is false:
+            command "/authme register %{_argument::2}% %{_argument::3}%" by console
+            if AuthMeApi.getInstance().isRegistered({_argument::2}) is false:
+              bot reply "噔噔咚 注册失败 请检查用户名和密码是否合法"
+            else:
+              bot reply "这个玩家已被南狐成功注册！"
+              sendMessage("group","%{_groupid}%","管理员%qq%注册了用户：%{_argument::2}%")
+          else:
+            bot reply "这个玩家已经被其他管理员注册过啦！"
+        else:
+          bot reply "本南狐傲娇到不让你执行命令！"
+      if {_argument::2} is "broadcast":
+        if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
+          set {_prefix} to (length of {_argument::1})+1+(length of {_argument::2})+2
+          set {_message} to subtext of bot message from characters {_prefix} to length of bot message
+          broadcast "%{_message}%"
+          bot reply "南狐已将服务器玩全都家吼了一遍啦"
+        else:
+          bot reply "本南狐傲娇到不让你执行命令！"
+      if {_argument::2} is "maintenance":
+        if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
+          if {_argument::3} is "on":
+            command "/maintenance on" by console
+            bot reply "南狐已将服务器叼走了哟~"
+          else if {_argument::3} is "off":
+            command "/maintenance off" by console
+            bot reply "南狐已将服务器叼回来啦！"
+        else:
+          bot reply "本南狐傲娇到不让你执行命令！"
+      if {_argument::2} is "execute":
+        if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
+          set {_prefix} to (length of {_argument::1})+1+(length of {_argument::2})+2
+          set {_command} to subtext of bot message from characters {_prefix} to length of bot message
+          command "/%{_command}%" by console
+          bot reply "南狐已将指令扔进服务器中了哟~"
+        else:
+          bot reply "本南狐傲娇到不让你执行命令！"
+      if {_argument::2} is "info":
+        set {_infotext::0} to "KittenCraft 运行中！%nl%"
+        set {_infotext::1} to "在线玩家：%placeholder ""playerlist_online,normal,yes,list""%%nl%"
+        set {_infotext::2} to "服务器人数：%placeholder ""server_online""%/%placeholder ""server_max_players""%%nl%"
+        set {_infotext::3} to "服务器已用内存：%placeholder ""server_ram_used""%M%nl%"
+        set {_infotext::4} to "服务器TPS：%placeholder ""server_tps_5""%"
+        
+        set {_result} to linkText({_infotext::*})
+        bot reply "%{_result}%"
       
 # 当机器人收到消息时（群聊消息转发部分）
 on bot message:
   set {_groupid} to getConfigValue("main-group") # 读取主群群号
   set {_cf} to getConfigValue("chat-forward")
-  
+  bot message start with "!fox":
+    stop
   if group-code is "%{_groupid}%":
     if {_cf} is "true":
       broadcast "[群聊]<%sender%> %bot message%"
       
-# 当服务器内玩家发消息时      
+# 当服务器内玩家发消息时
 on chat:
   set {_groupid} to getConfigValue("main-group")
   set {_cf} to getConfigValue("chat-forward")
   if {_cf} is "true":
     sendMessage("group","%{_groupid}%","[KittenCraft]%player's name%: %message%")
 
-# 当玩家完成某个成就时    
+# 当玩家完成某个成就时
+# Todo：换用yaml进行成就翻译
 on PlayerAdvancementDoneEvent:
   set {_groupid} to getConfigValue("main-group")
+  set {_cf} to getConfigValue("chat-forward")
   set {_advancement} to event.getAdvancement().getKey().toString()
   set {_player} to event.getPlayer().getName()
-  {_advancement} contain "recipes/":
-    stop
-  else:
-    set {_advancementStr} to placeholder "AdvancementTranslate_%{_advancement}%"
-    sendMessage("group","%{_groupid}%","玩家%{_player}%获得了成就 [%{_advancementStr}%]")
+  if {_cf} is "true":
+    {_advancement} contain "recipes/":
+      stop
+    else:
+      set {_advancementStr} to placeholder "AdvancementTranslate_%{_advancement}%"
+      sendMessage("group","%{_groupid}%","玩家%{_player}%获得了成就 [%{_advancementStr}%]")
+    
+# 当玩家离开时
+on quit:
+  set {_groupid} to getConfigValue("main-group")
+  set {_cf} to getConfigValue("chat-forward")
+  set {_vanish} to getConfigValue("op-vanish")
+  if {_cf} is "true": # 聊天转发是否开启
+    if {_vanish} is "true": # 管理员隐身是否开启
+      if player is not op:
+        sendMessage("group","%{_groupid}%","%player's name% 离开了服务器")
+    else:
+      sendMessage("group","%{_groupid}%","%player's name% 离开了服务器")
+      
+# 当玩家加入时
+on join:
+  set {_groupid} to getConfigValue("main-group")
+  set {_cf} to getConfigValue("chat-forward")
+  set {_vanish} to getConfigValue("op-vanish")
+  if {_cf} is "true": # 聊天转发是否开启
+    if {_vanish} is "true": # 管理员隐身是否开启
+      if player is not op:
+        sendMessage("group","%{_groupid}%","%player's name% 加入了服务器")
+    else:
+      sendMessage("group","%{_groupid}%","%player's name% 加入了服务器")
+      
+# 死亡转发
+on death of player:
+  set {_groupid} to getConfigValue("main-group")
+  set {_cf} to getConfigValue("chat-forward")
+  if {_cf} is "true": # 聊天转发是否开启
+    if "%event-damagecause%" is "unknown":
+      sendMessage("group","%{_groupid}%","%player's name% 发现了死字的四种写法")
+    else if "%event-damagecause%" is "contact":
+      sendMessage("group","%{_groupid}%","%player's name% 被刺死了")
+    else if "%event-damagecause%" is "wither":
+      sendMessage("group","%{_groupid}%","%player's name% 麻了")
+    else if "%event-damagecause%" is "projectile":
+      sendMessage("group","%{_groupid}%","%player's name% 被社保了")
+    else if "%event-damagecause%" is "void":
+      sendMessage("group","%{_groupid}%","%player's name% 被深渊吞噬")
+    else if "%event-damagecause%" is "fall":
+      sendMessage("group","%{_groupid}%","%player's name% 失足了")
+    else if "%event-damagecause%" is "burning":
+      sendMessage("group","%{_groupid}%","%player's name% 火冒三丈（物理）")
+    else if "%event-damagecause%" is "lightning":
+      sendMessage("group","%{_groupid}%","正道的光，劈在了%player's name% 上")
+    else if "%event-damagecause%" is "fire":
+      sendMessage("group","%{_groupid}%","%player's name% 成为了光")
+    else if "%event-damagecause%" is "sweep attack":
+      sendMessage("group","%{_groupid}%","%player's name% 猛吸了口剑气")
+    else if "%event-damagecause%" is "potion":
+      sendMessage("group","%{_groupid}%","%player's name% 成为了白雪公主！")
+    else if "%event-damagecause%" is "entity explosion":
+      sendMessage("group","%{_groupid}%","%player's name% 被干爆了")
+    else if "%event-damagecause%" is "attack":
+      sendMessage("group","%{_groupid}%","%player's name% 大意了，没有闪")
+    else if "%event-damagecause%" is "lava":
+      sendMessage("group","%{_groupid}%","%player's name% 觉得这温泉不对劲")
+    else:
+      sendMessage("group","%{_groupid}%","%player's name% 因为 %event-damagecause% 惨叫一声醒在了自己的床上") 
+     
+# 劫掠转发
+on raid:
+  set {_groupid} to getConfigValue("main-group")
+  set {_cf} to getConfigValue("chat-forward")
+  if {_cf} is "true": # 聊天转发是否开启
+    set {_raidlevel} to event.getRaid().getBadOmenLevel()+1
+    set {_posx} to event.getRaid().getLocation().getBlockX()
+    set {_posy} to event.getRaid().getLocation().getBlockY()
+    set {_posz} to event.getRaid().getLocation().getBlockZ()
+    set {_raidText::0} to "主世界正在发生一起劫掠事件！%nl%"
+    set {_raidText::1} to "劫掠级别：%{_raidlevel}%%nl%"
+    set {_raidText::2} to "劫掠地点：（x：%{_posx}% y：%{_posy}% z：%{_posz}%）%nl%"
+    set {_raidText::3} to "本台记者南狐将持续为您扌"
+    
+    set {_result} to linkText({_raidText::*})
+    sendMessage("group","%{_groupid}%","%{_result}%")
+    
+on victory:
+  set {_groupid} to getConfigValue("main-group")
+  set {_cf} to getConfigValue("chat-forward")
+  if {_cf} is "true": # 聊天转发是否开启
+    set {_ticks} to event.getRaid().getActiveTicks()
+    set {_posx} to event.getRaid().getLocation().getBlockX()
+    set {_posy} to event.getRaid().getLocation().getBlockY()
+    set {_posz} to event.getRaid().getLocation().getBlockZ()
+    set {_level} to event.getRaid().getBadOmenLevel()
+    set {_status} to event.getRaid().getStatus()
+    set {_group_count} to event.getRaid().getTotalGroups()
+
+    set {_Text::0} to "路边社报道，一场%{_level}%级的袭击刚刚结束！%nl%"
+    set {_Text::1} to "经过了%{_ticks}%刻的斗争，这次袭击的结果是：%{_status}%！%nl%"
+    set {_Text::2} to "刚才有%{_group_count}%波掠夺者"
+    set {_Text::3} to "感谢您持续关注本台记者南狐的报道!"
+
+    set {_result} to linkText({_Text::*})
+    sendMessage("group","%{_groupid}%","%{_result}%")
