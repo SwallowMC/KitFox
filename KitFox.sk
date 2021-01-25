@@ -171,7 +171,7 @@ on bot message:
           if {_silent} is "false":
             bot reply "南狐正在重载~"
           wait 1 second #避免报错
-          reload skript "KitFox"
+          reload skript "KitFox.sk"
         else:
           if {_silent} is "false":
             bot reply "本南狐傲娇到不让你执行命令！"
