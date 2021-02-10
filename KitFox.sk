@@ -1,7 +1,7 @@
 # KitFox.sk
 # 依赖:
 # Skript 2.4.0 *
-# MCQQbot 1.0.4 *
+# MCQQbot 1.1.1 *
 # skript-yaml 1.3.2*
 # skript-reflect 2.1.0 * 
 # skript-placeholders 1.5 *
@@ -15,7 +15,7 @@
 # --------------------------------------------
 
 options:
-  version: 1.0
+  version: 1.1-DEV
   config-version: 3
   
 import: # 需要引用的java类
@@ -36,6 +36,7 @@ function createConfig():
   set {_example::Example} to 114514
   set {_example::anotherExample} to 1919810
   load yml {_configPath} as {_configPath}
+  
   set yml value "config-version" from {_configPath} to {@config-version}
   set the comments of yaml node "config-version" from {_configPath} to "请不要修改！"
   set yml value "chat-forward" from {_configPath} to true
@@ -47,6 +48,8 @@ function createConfig():
   set the comments of yaml node "main-group" from {_configPath} to "机器人的主要工作群聊（群聊转发，广播等）"
   set yml value "command-prefix" from {_configPath} to "!fox"
   set the comments of yaml node "command-prefix" from {_configPath} to "机器人命令前缀（不可有空格）"
+  set yml value "remote-secret" from {_configPath} to "!fox"
+  set the comments of yaml node "remote-secret" from {_configPath} to "用于远程控制服务器，需要MCSM面板的支持"
   set yml list "enabled-groups" from {_configPath} to {_example::*}
   set the comments of yaml node "enabled-groups" from {_configPath} to "哪些群可以执行机器人命令"
   set yml list "admin" from {_configPath} to {_example::*}
@@ -56,7 +59,7 @@ function createConfig():
   
   save yml {_configPath}
   unload yml {_configPath}
-
+  
 function getConfigValue(name: text) :: text:
   set {_configPath} to "plugins/KitFox/config.yml"
   if yml file {_configPath} exists:
@@ -83,7 +86,10 @@ function getConfigList(name: text) :: objects:
     return {_result::*}
 
 function sendMessage(type: text ,id: text ,message: text):
-  command "/mcqqbot send %{_type}% %{_id}% %{_message}%" by console
+  if {_type} is "group":
+    send bot message {_message} to group {_id}
+  else:
+    send bot message {_message} to friend {_id}
 
 function isInList(code: text ,type: text) :: boolean:
   set {_configPath} to "plugins/KitFox/config.yml"
@@ -113,6 +119,8 @@ function isResponsable(group-code: text) :: boolean:
 
 # 当脚本被启动时
 on load:
+  if "{@version}" is not "%{lastVersion}%":
+    set {buildTimes} to 1
   message "[KitFox] 南狐(版本：{@version}-build%{buildTimes}%)启动中……" to console
   set {_configPath} to "plugins/KitFox/config.yml"
   if yml file {_configPath} exists: # 检测配置文件是否存在
@@ -141,7 +149,7 @@ on server stop:
   sendMessage("group","%{_groupid}%","KittenCraft 麻了")
 
 # 当机器人收到消息时(命令执行部分)
-on bot message:
+on bot receive message:
   set {_groupid} to getConfigValue("main-group")
   set {_prefix} to getConfigValue("command-prefix")
   set {_silent} to getConfigValue("silent-mode")
@@ -163,6 +171,7 @@ on bot message:
         set {_helptext::8} to "ban [username] [time] [reason] 封禁玩家%nl%"
         set {_helptext::9} to "maintenance <on/off>  维护模式%nl%"
         set {_helptext::10} to "broadcast [message]  你吼辣么大声干什么啊"
+        set {_helptext::11} to "remote [request]  向面板发送请求，需要面板支持"
         
         set {_result} to linkText({_helptext::*})
         bot reply "%{_result}%"
@@ -170,8 +179,10 @@ on bot message:
         if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
           if {_silent} is "false":
             bot reply "南狐正在重载~"
+          set {buildTimes} to {buildTimes}+1 # 增加版本计次
+          set {lastVersion} to "{@version}"
           wait 1 second #避免报错
-          reload skript "KitFox.sk"
+          reload skript "KitFox"
         else:
           if {_silent} is "false":
             bot reply "本南狐傲娇到不让你执行命令！"
@@ -259,9 +270,15 @@ on bot message:
         
         set {_result} to linkText({_infotext::*})
         bot reply "%{_result}%"
+      if {_argument::2} is "remote":
+        if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
+          bot reply "连不上，滚"
+        else:
+          if {_silent} is "false":
+            bot reply "本南狐傲娇到不让你执行命令！"   
       
 # 当机器人收到消息时（群聊消息转发部分）
-on bot message:
+on bot receive message:
   set {_groupid} to getConfigValue("main-group") # 读取主群群号
   set {_cf} to getConfigValue("chat-forward")
   bot message start with "!fox":
