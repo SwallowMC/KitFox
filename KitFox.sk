@@ -15,7 +15,7 @@
 # --------------------------------------------
 
 options:
-  version: 1.1-DEV
+  version: 1.1-KCLimited
   config-version: 3
   
 import: # 需要引用的java类
@@ -30,6 +30,11 @@ import: # 需要引用的java类
   org.bukkit.event.raid.RaidTriggerEvent as raid
   org.bukkit.event.raid.RaidFinishEvent as victory
   fr.xephi.authme.api.v3.AuthMeApi
+
+function initUserlog():
+  set {_configPath} to "plugins/KitFox/user.yml"
+  load yml {_configPath} as {_configPath}
+  save yml {_configPath}
   
 function createConfig():
   set {_configPath} to "plugins/KitFox/config.yml"
@@ -148,6 +153,10 @@ on server stop:
   set {_groupid} to getConfigValue("main-group")
   sendMessage("group","%{_groupid}%","KittenCraft 麻了")
 
+on member join group:
+  set {_groupid} to getConfigValue("main-group")
+  sendMessage("group","%{_groupid}%","欢迎来到KittenCraft！进入服务器前确保您已阅读玩家守则。进入服务器前请先输入!fox bind [您的用户名]来进行用户名绑定！")
+
 # 当机器人收到消息时(命令执行部分)
 on bot receive message:
   set {_groupid} to getConfigValue("main-group")
@@ -170,8 +179,9 @@ on bot receive message:
         set {_helptext::7} to "reg [username] [pass] 给玩家开账号%nl%"
         set {_helptext::8} to "ban [username] [time] [reason] 封禁玩家%nl%"
         set {_helptext::9} to "maintenance <on/off>  维护模式%nl%"
-        set {_helptext::10} to "broadcast [message]  你吼辣么大声干什么啊"
-        set {_helptext::11} to "remote [request]  向面板发送请求，需要面板支持"
+        set {_helptext::10} to "broadcast [message]  你吼辣么大声干什么啊%nl%"
+        set {_helptext::11} to "remote [request]  向面板发送请求，需要面板支持%nl%"
+        set {_helptext::12} to "bind [username]  绑定用户"
         
         set {_result} to linkText({_helptext::*})
         bot reply "%{_result}%"
@@ -218,16 +228,26 @@ on bot receive message:
         if isInList(qq,"helper") is true:# 检测指令发送者是否有执行权限
           if AuthMeApi.getInstance().isRegistered({_argument::3}) is false:
             command "/authme register %{_argument::3}% %{_argument::4}%" by console
-            if AuthMeApi.getInstance().isRegistered({_argument::3}) is false:
-              bot reply "噔噔咚 注册失败 请检查用户名和密码是否合法"
-            else:
-              bot reply "这个玩家已被南狐成功注册！"
-              sendMessage("group","%{_groupid}%","管理员%qq%注册了用户：%{_argument::3}%")
+            command "/premium %{_argument::3}%" by console
+            bot reply "这个玩家已被南狐成功注册！"
+            sendMessage("group","%{_groupid}%","管理员%qq%注册了用户：%{_argument::3}%")
           else:
             bot reply "这个玩家已经被其他管理员注册过啦！"
         else:
           if {_silent} is "false":
             bot reply "本南狐傲娇到不让你执行命令！"
+      if {_argument::2} is "bind":
+        if "%{_argument::3}%" is not banned:# 检测指令发送者是否有执行权限
+          if TODO:
+            command "/authme register %{_argument::3}% %{_argument::4}%" by console
+            command "/premium %{_argument::3}%" by console
+            bot reply "这个玩家已被南狐成功注册！"
+            sendMessage("group","%{_groupid}%","管理员%qq%注册了用户：%{_argument::3}%")
+          else:
+            bot reply "您已经绑定过啦！"
+        else:
+          if {_silent} is "false":
+            bot reply "您好像已经被ban了呢……"      
       if {_argument::2} is "broadcast":
         if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
           set {_prefix} to (length of {_argument::1})+1+(length of {_argument::2})+2
