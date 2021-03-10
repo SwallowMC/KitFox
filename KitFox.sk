@@ -160,6 +160,7 @@ on member join group:
 
 # 当机器人收到消息时(命令执行部分)
 on bot receive message:
+  set {_configPath} to "plugins/KitFox/config.yml"
   set {_groupid} to getConfigValue("main-group")
   set {_prefix} to getConfigValue("command-prefix")
   set {_silent} to getConfigValue("silent-mode")
@@ -187,7 +188,7 @@ on bot receive message:
         set {_result} to linkText({_helptext::*})
         bot reply "%{_result}%"
       if {_argument::2} is "reload":
-        if isInList("plugins/KitFox/config.yml",qq,"admin") is true:# 检测指令发送者是否有执行权限
+        if isInList({_configPath},qq,"admin") is true:# 检测指令发送者是否有执行权限
           if {_silent} is "false":
             bot reply "南狐正在重载~"
           set {buildTimes} to {buildTimes}+1 # 增加版本计次
@@ -199,7 +200,7 @@ on bot receive message:
             bot reply "本南狐傲娇到不让你执行命令！"
     # 基本指令
       if {_argument::2} is "gift":
-        if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
+        if isInList({_configPath},qq,"admin") is true:# 检测指令发送者是否有执行权限
           chance of 70%:
             command "/give @a stick 8" by console
             command "/give @r oak_log 2" by console
@@ -217,7 +218,7 @@ on bot receive message:
         else:
           bot reply "本南狐傲娇到不让你执行命令！"
       if {_argument::2} is "ban":
-        if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
+        if isInList({_configPath},qq,"admin") is true:# 检测指令发送者是否有执行权限
           command "/tempban %{_argument::3}% %{_argument::4}%d %{_argument::5}%" by console
           if {_silent} is false:
             bot reply "封禁成功！"
@@ -226,7 +227,7 @@ on bot receive message:
           if {_silent} is "false":
             bot reply "本南狐傲娇到不让你执行命令！"
       if {_argument::2} is "reg":
-        if isInList(qq,"helper") is true:# 检测指令发送者是否有执行权限
+        if isInList({_configPath},qq,"helper") is true:# 检测指令发送者是否有执行权限
           if AuthMeApi.getInstance().isRegistered({_argument::3}) is false:
             command "/authme register %{_argument::3}% %{_argument::4}%" by console
             command "/premium %{_argument::3}%" by console
@@ -240,9 +241,7 @@ on bot receive message:
       if {_argument::2} is "bind":
         if "%{_argument::3}%" is not banned:# 检测指令发送者是否有执行权限
           set {_userPath} to "plugins/KitFox/user.yml"
-          set {_configPath} to "plugins/KitFox/config.yml"
-          
-          if isInList({_configPath},qq,"player") is false:
+          if isInList({_userPath},qq,"player") is false:
             set yaml value "player.%qq%.playername" from {_userPath} to "%{_argument::3}%"
             set yaml value "player.%qq%.relative" from {_userPath} to "Bind-only"
             command "/authme register %{_argument::3}% %{_argument::4}%" by console
@@ -254,7 +253,7 @@ on bot receive message:
         else:
           bot reply "您好像已经被ban了呢……"
       if {_argument::2} is "broadcast":
-        if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
+        if isInList({_configPath},qq,"admin") is true:# 检测指令发送者是否有执行权限
           set {_prefix} to (length of {_argument::1})+1+(length of {_argument::2})+2
           set {_message} to subtext of bot message from characters {_prefix} to length of bot message
           broadcast "%{_message}%"
@@ -264,7 +263,7 @@ on bot receive message:
           if {_silent} is "false":
             bot reply "本南狐傲娇到不让你执行命令！"
       if {_argument::2} is "maintenance":
-        if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
+        if isInList({_configPath},qq,"admin") is true:# 检测指令发送者是否有执行权限
           if {_argument::3} is "on":
             command "/maintenance on" by console
             if {_silent} is "false":
@@ -277,7 +276,7 @@ on bot receive message:
           if {_silent} is "false":
             bot reply "本南狐傲娇到不让你执行命令！"
       if {_argument::2} is "run":
-        if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
+        if isInList({_configPath},qq,"admin") is true:# 检测指令发送者是否有执行权限
           set {_prefix} to (length of {_argument::1})+1+(length of {_argument::2})+2
           set {_command} to subtext of bot message from characters {_prefix} to length of bot message
           command "/%{_command}%" by console
@@ -296,7 +295,7 @@ on bot receive message:
         set {_result} to linkText({_infotext::*})
         bot reply "%{_result}%"
       if {_argument::2} is "remote":
-        if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
+        if isInList({_configPath},qq,"admin") is true:# 检测指令发送者是否有执行权限
           bot reply "连不上，滚"
         else:
           if {_silent} is "false":
