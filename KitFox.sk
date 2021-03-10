@@ -186,11 +186,13 @@ on bot receive message:
         set {_helptext::5} to "stop     关闭服务器%nl%"
         set {_helptext::6} to "run [command]  隔空发送指令%nl%"
         set {_helptext::7} to "reg [qq] [username] [pass] [relative] 给玩家开账号%nl%"
-        set {_helptext::8} to "ban [username] [time] [reason] 封禁玩家%nl%"
-        set {_helptext::9} to "maintenance <on/off>  维护模式%nl%"
-        set {_helptext::10} to "broadcast [message]  你吼辣么大声干什么啊%nl%"
-        set {_helptext::11} to "remote [request]  向面板发送请求，需要面板支持%nl%"
-        set {_helptext::12} to "bind [username]  绑定用户"
+        set {_helptext::8} to "unreg [username]    账号吞噬者 已苏醒%nl%"
+        set {_helptext::9} to "cp [username] [pass]   给玩家改密%nl%"
+        set {_helptext::10} to "ban [username] [time] [reason] 封禁玩家%nl%"
+        set {_helptext::11} to "maintenance <on/off>  维护模式%nl%"
+        set {_helptext::12} to "broadcast [message]  你吼辣么大声干什么啊%nl%"
+        set {_helptext::13} to "remote [request]  向面板发送请求，需要面板支持%nl%"
+        set {_helptext::14} to "bind [username]  绑定用户"
         
         set {_result} to linkText({_helptext::*})
         bot reply "%{_result}%"
@@ -239,7 +241,7 @@ on bot receive message:
             set {_userPath} to "plugins/KitFox/user.yml"
             load yml {_userPath} as {_userPath}
             set yaml value "player.%{_argument::3}%.playername" from {_userPath} to "%{_argument::4}%"
-            set yaml value "player.%qq%.relative" from {_userPath} to "%{_argument::6}%"
+            set yaml value "player.%{_argument::4}%.relative" from {_userPath} to "%{_argument::6}%"
             save yml {_userPath}
             unload yml {_userPath}
             command "/authme register %{_argument::4}% %{_argument::5}%" by console
