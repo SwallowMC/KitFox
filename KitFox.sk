@@ -185,7 +185,7 @@ on bot receive message:
         set {_helptext::4} to "info     显示服务器状态%nl%"
         set {_helptext::5} to "stop     关闭服务器%nl%"
         set {_helptext::6} to "run [command]  隔空发送指令%nl%"
-        set {_helptext::7} to "reg [username] [pass] [relative] 给玩家开账号%nl%"
+        set {_helptext::7} to "reg [qq] [username] [pass] [relative] 给玩家开账号%nl%"
         set {_helptext::8} to "ban [username] [time] [reason] 封禁玩家%nl%"
         set {_helptext::9} to "maintenance <on/off>  维护模式%nl%"
         set {_helptext::10} to "broadcast [message]  你吼辣么大声干什么啊%nl%"
@@ -235,15 +235,15 @@ on bot receive message:
             bot reply "本南狐傲娇到不让你执行命令！"
       if {_argument::2} is "reg":
         if isInList({_configPath},qq,"helper") is true:# 检测指令发送者是否有执行权限
-          if AuthMeApi.getInstance().isRegistered({_argument::3}) is false:
+          if AuthMeApi.getInstance().isRegistered({_argument::4}) is false:
             set {_userPath} to "plugins/KitFox/user.yml"
             load yml {_userPath} as {_userPath}
-            set yaml value "player.%qq%.playername" from {_userPath} to "%{_argument::3}%"
-            set yaml value "player.%qq%.relative" from {_userPath} to "%{_argument::5}%"
+            set yaml value "player.%{_argument::3}%.playername" from {_userPath} to "%{_argument::4}%"
+            set yaml value "player.%qq%.relative" from {_userPath} to "%{_argument::6}%"
             save yml {_userPath}
             unload yml {_userPath}
-            command "/authme register %{_argument::3}% %{_argument::4}%" by console
-            command "/premium %{_argument::3}%" by console
+            command "/authme register %{_argument::4}% %{_argument::5}%" by console
+            command "/premium %{_argument::5}%" by console
             bot reply "这个玩家已被南狐成功注册！"
             sendMessage("group","%{_groupid}%","管理员%qq%注册了用户：%{_argument::3}%")
           else:
@@ -260,7 +260,7 @@ on bot receive message:
             set yaml value "player.%qq%.relative" from {_userPath} to "Bind-only"
             save yml {_userPath}
             unload yml {_userPath}
-            command "/authme register %{_argument::3}% %{_argument::4}%" by console
+            command "/authme register %{_argument::3}% changed" by console
             command "/premium %{_argument::3}%" by console
             bot reply "账号已成功以正版模式绑定！如需要以盗版模式或基岩模式绑定，请联系管理员"
           else:
