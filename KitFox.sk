@@ -30,11 +30,6 @@ import: # 需要引用的java类
   org.bukkit.event.raid.RaidTriggerEvent as raid
   org.bukkit.event.raid.RaidFinishEvent as victory
   fr.xephi.authme.api.v3.AuthMeApi
-
-function initUserlog():
-  set {_configPath} to "plugins/KitFox/user.yml"
-  load yml {_configPath} as {_configPath}
-  save yml {_configPath}
   
 function createConfig():
   set {_configPath} to "plugins/KitFox/config.yml"
@@ -101,11 +96,24 @@ function isInList(path: text ,code: text ,type: text) :: boolean:
   load yml {_configPath} as {_configPath}
   set {_template::*} to yml list {_type} from {_configPath}
   loop {_template::*}:
+    # message "%loop-value%" to console
     if {_code} is "%loop-value%":
+      unload yml {_configPath}
       return true
   unload yml {_configPath}
   return false
-
+  
+function isInNode(path: text ,code: text ,type: text) :: boolean:
+  set {_configPath} to {_path}
+  load yml {_configPath} as {_configPath}
+  loop yaml node keys {_type} from {_configPath}:
+    # message "判断%{_type}%.%{_code}%和%loop-node%" to console
+    if "%{_type}%.%{_code}%" is "%loop-node%":
+      unload yml {_configPath}
+      return true
+  unload yml {_configPath}
+  return false
+	
 function linkText(textCollection: objects) :: text:
   set {_result} to ""
   loop {_textCollection::*}:
@@ -135,7 +143,6 @@ on load:
     createConfig()
   if getConfigValue("config-version") is not "{@config-version}":
     message "[KitFox] 哎呀……这个配置文件发霉了……或许你应该重新生成一下？" to console
-  initUserlog()  
   set {_admin::*} to getConfigList("admin")
   loop {_admin::*}:
     sendMessage("friend","%loop-value%","南狐 已苏醒")
@@ -178,7 +185,7 @@ on bot receive message:
         set {_helptext::4} to "info     显示服务器状态%nl%"
         set {_helptext::5} to "stop     关闭服务器%nl%"
         set {_helptext::6} to "run [command]  隔空发送指令%nl%"
-        set {_helptext::7} to "reg [username] [pass] 给玩家开账号%nl%"
+        set {_helptext::7} to "reg [username] [pass] [relative] 给玩家开账号%nl%"
         set {_helptext::8} to "ban [username] [time] [reason] 封禁玩家%nl%"
         set {_helptext::9} to "maintenance <on/off>  维护模式%nl%"
         set {_helptext::10} to "broadcast [message]  你吼辣么大声干什么啊%nl%"
@@ -229,6 +236,12 @@ on bot receive message:
       if {_argument::2} is "reg":
         if isInList({_configPath},qq,"helper") is true:# 检测指令发送者是否有执行权限
           if AuthMeApi.getInstance().isRegistered({_argument::3}) is false:
+            set {_userPath} to "plugins/KitFox/user.yml"
+            load yml {_userPath} as {_userPath}
+            set yaml value "player.%qq%.playername" from {_userPath} to "%{_argument::3}%"
+            set yaml value "player.%qq%.relative" from {_userPath} to "%{_argument::5}%"
+            save yml {_userPath}
+            unload yml {_userPath}
             command "/authme register %{_argument::3}% %{_argument::4}%" by console
             command "/premium %{_argument::3}%" by console
             bot reply "这个玩家已被南狐成功注册！"
@@ -241,13 +254,15 @@ on bot receive message:
       if {_argument::2} is "bind":
         if "%{_argument::3}%" is not banned:# 检测指令发送者是否有执行权限
           set {_userPath} to "plugins/KitFox/user.yml"
-          if isInList({_userPath},qq,"player") is false:
+          if isInNode({_userPath},qq,"player") is false:
+            load yml {_userPath} as {_userPath}
             set yaml value "player.%qq%.playername" from {_userPath} to "%{_argument::3}%"
             set yaml value "player.%qq%.relative" from {_userPath} to "Bind-only"
+            save yml {_userPath}
+            unload yml {_userPath}
             command "/authme register %{_argument::3}% %{_argument::4}%" by console
             command "/premium %{_argument::3}%" by console
-            bot reply "账号已成功绑定！"
-            sendMessage("group","%{_groupid}%","管理员%qq%注册了用户：%{_argument::3}%")
+            bot reply "账号已成功以正版模式绑定！如需要以盗版模式或基岩模式绑定，请联系管理员"
           else:
             bot reply "您已经绑定过啦！"
         else:
