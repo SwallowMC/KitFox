@@ -96,8 +96,8 @@ function sendMessage(type: text ,id: text ,message: text):
   else:
     send bot message {_message} to friend {_id}
 
-function isInList(code: text ,type: text) :: boolean:
-  set {_configPath} to "plugins/KitFox/config.yml"
+function isInList(path: text ,code: text ,type: text) :: boolean:
+  set {_configPath} to {_path}
   load yml {_configPath} as {_configPath}
   set {_template::*} to yml list {_type} from {_configPath}
   loop {_template::*}:
@@ -115,7 +115,7 @@ function linkText(textCollection: objects) :: text:
 function isResponsable(group-code: text) :: boolean:
   if {_group-code} is "<none>":
     return true
-  else if isInList({_group-code},"enabled-groups") is true:
+  else if isInList("plugins/KitFox/config.yml",{_group-code},"enabled-groups") is true:
     return true
   else:
     return false
@@ -135,6 +135,7 @@ on load:
     createConfig()
   if getConfigValue("config-version") is not "{@config-version}":
     message "[KitFox] 哎呀……这个配置文件发霉了……或许你应该重新生成一下？" to console
+  initUserlog()  
   set {_admin::*} to getConfigList("admin")
   loop {_admin::*}:
     sendMessage("friend","%loop-value%","南狐 已苏醒")
@@ -186,7 +187,7 @@ on bot receive message:
         set {_result} to linkText({_helptext::*})
         bot reply "%{_result}%"
       if {_argument::2} is "reload":
-        if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
+        if isInList("plugins/KitFox/config.yml",qq,"admin") is true:# 检测指令发送者是否有执行权限
           if {_silent} is "false":
             bot reply "南狐正在重载~"
           set {buildTimes} to {buildTimes}+1 # 增加版本计次
@@ -238,16 +239,20 @@ on bot receive message:
             bot reply "本南狐傲娇到不让你执行命令！"
       if {_argument::2} is "bind":
         if "%{_argument::3}%" is not banned:# 检测指令发送者是否有执行权限
-          if TODO:
+          set {_userPath} to "plugins/KitFox/user.yml"
+          set {_configPath} to "plugins/KitFox/config.yml"
+          
+          if isInList({_configPath},qq,"player") is false:
+            set yaml value "player.%qq%.playername" from {_userPath} to "%{_argument::3}%"
+            set yaml value "player.%qq%.relative" from {_userPath} to "Bind-only"
             command "/authme register %{_argument::3}% %{_argument::4}%" by console
             command "/premium %{_argument::3}%" by console
-            bot reply "这个玩家已被南狐成功注册！"
+            bot reply "账号已成功绑定！"
             sendMessage("group","%{_groupid}%","管理员%qq%注册了用户：%{_argument::3}%")
           else:
             bot reply "您已经绑定过啦！"
         else:
-          if {_silent} is "false":
-            bot reply "您好像已经被ban了呢……"      
+          bot reply "您好像已经被ban了呢……"
       if {_argument::2} is "broadcast":
         if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
           set {_prefix} to (length of {_argument::1})+1+(length of {_argument::2})+2
