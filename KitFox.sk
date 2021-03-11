@@ -241,13 +241,13 @@ on bot receive message:
             set {_userPath} to "plugins/KitFox/user.yml"
             load yml {_userPath} as {_userPath}
             set yaml value "player.%{_argument::3}%.playername" from {_userPath} to "%{_argument::4}%"
-            set yaml value "player.%{_argument::4}%.relative" from {_userPath} to "%{_argument::6}%"
+            set yaml value "player.%{_argument::3}%.relative" from {_userPath} to "%{_argument::6}%"
             save yml {_userPath}
             unload yml {_userPath}
             command "/authme register %{_argument::4}% %{_argument::5}%" by console
-            command "/premium %{_argument::5}%" by console
+            command "/premium %{_argument::4}%" by console
             bot reply "这个玩家已被南狐成功注册！"
-            sendMessage("group","%{_groupid}%","管理员%qq%注册了用户：%{_argument::3}%")
+            sendMessage("group","%{_groupid}%","管理员%qq%注册了用户：%{_argument::4}%")
           else:
             bot reply "这个玩家已经被其他管理员注册过啦！"
         else:
