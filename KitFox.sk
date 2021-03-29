@@ -126,7 +126,6 @@ on load:
     message "[KitFox] 哎呀……这个配置文件发霉了……或许你应该重新生成一下？" to console
   set {_admin::*} to getConfigList("admin")
   loop {_admin::*}:
-    sendMessage("friend","%loop-value%","南狐 已苏醒")
     send message "南狐 已苏醒" to loop-value
   
 # 当脚本被关闭时  
@@ -148,7 +147,7 @@ on bot receive message:
   set {_groupid} to getConfigValue("main-group")
   set {_prefix} to getConfigValue("command-prefix")
   set {_silent} to getConfigValue("silent-mode")
-  if isResponsable("%group-code%") is true: # 群聊隔离
+  if isResponsable("%qq-group's id%") is true: # 群聊隔离
     set {_argument::*} to bot-message's content split by " " # 指令分割
     if {_argument::1} is {_prefix}: #命令前缀
     # 核心指令：
@@ -205,7 +204,7 @@ on bot receive message:
           command "/tempban %{_argument::3}% %{_argument::4}%d %{_argument::5}%" by console
           if {_silent} is false:
             reply "封禁成功！"
-          sendMessage("group","%{_groupid}%","玩家%{_argument::3}%因为%{_argument::4}%被管理员封禁%{_argument::5}%天，希望各位以此为戒！")
+            send message "玩家%{_argument::3}%因为%{_argument::4}%被管理员封禁%{_argument::5}%天，希望各位以此为戒！" to {_groupid}
         else:
           if {_silent} is "false":
             reply "本南狐傲娇到不让你执行命令！"
@@ -217,7 +216,7 @@ on bot receive message:
               reply "噔噔咚 注册失败 请检查用户名和密码是否合法"
             else:
               reply "这个玩家已被南狐成功注册！"
-              sendMessage("group","%{_groupid}%","管理员%qq%注册了用户：%{_argument::3}%")
+              send message "管理员注册了用户：%{_argument::3}%]" to {_groupid}
           else:
             reply "这个玩家已经被其他管理员注册过啦！"
         else:
@@ -333,39 +332,39 @@ on death of player:
   set {_cf} to getConfigValue("chat-forward")
   if {_cf} is "true": # 聊天转发是否开启
     if "%event-damagecause%" is "unknown":
-      sendMessage("group","%{_groupid}%","%player's name% 发现了死字的四种写法")
+      send message "%player's name% 发现了死字的四种写法" to {_groupid}
     else if "%event-damagecause%" is "drowning":
-      sendMessage("group","%{_groupid}%","%player's name% 水死了")  
+      send message "%player's name% 水死了" to {_groupid}
     else if "%event-damagecause%" is "contact":
-      sendMessage("group","%{_groupid}%","%player's name% 遇刺身亡")
+      send message "%player's name% 遇刺身亡" to {_groupid}
     else if "%event-damagecause%" is "thorns":
-      sendMessage("group","%{_groupid}%","%player's name% 渣死了")  
+      send message "%player's name% 渣死了" to {_groupid}
     else if "%event-damagecause%" is "wither":
-      sendMessage("group","%{_groupid}%","%player's name% 麻了")
+      send message "%player's name% 麻了" to {_groupid}
     else if "%event-damagecause%" is "projectile":
-      sendMessage("group","%{_groupid}%","%player's name% 被社保了")
+      send message "%player's name% 被乱箭射死" to {_groupid}
     else if "%event-damagecause%" is "void":
-      sendMessage("group","%{_groupid}%","%player's name% 被深渊吞噬")
+      send message "%player's name% 被深渊吞噬" to {_groupid}
     else if "%event-damagecause%" is "fall":
-      sendMessage("group","%{_groupid}%","%player's name% 失足了")
+      send message "%player's name% 失足了" to {_groupid}
     else if "%event-damagecause%" is "burning":
-      sendMessage("group","%{_groupid}%","%player's name% 火冒三丈（物理）")
+      send message "%player's name% 火冒三丈（物理）" to {_groupid}
     else if "%event-damagecause%" is "lightning":
-      sendMessage("group","%{_groupid}%","正道的光，劈在了%player's name% 上")
+      send message "正道的光，劈在了%player's name%上" to {_groupid}
     else if "%event-damagecause%" is "fire":
-      sendMessage("group","%{_groupid}%","%player's name% 成为了光")
+      send message "%player's name% 成为了一束光" to {_groupid}
     else if "%event-damagecause%" is "sweep attack":
-      sendMessage("group","%{_groupid}%","%player's name% 猛吸了口剑气")
+      send message "%player's name% 倒吸一口剑气" to {_groupid}
     else if "%event-damagecause%" is "potion":
-      sendMessage("group","%{_groupid}%","%player's name% 成为了白雪公主！")
+      send message "%player's name% 遇毒身亡" to {_groupid}
     else if "%event-damagecause%" is "entity explosion":
-      sendMessage("group","%{_groupid}%","%player's name% 被干爆了")
+      send message "%player's name% 被干爆了" to {_groupid}
     else if "%event-damagecause%" is "attack":
-      sendMessage("group","%{_groupid}%","%player's name% 大意了，没有闪")
+      send message "%player's name% 被一拳打回了床上" to {_groupid}
     else if "%event-damagecause%" is "lava":
-      sendMessage("group","%{_groupid}%","%player's name% 觉得这温泉不对劲")
+      send message "%player's name% 觉得这温泉不对劲" to {_groupid}
     else:
-      sendMessage("group","%{_groupid}%","%player's name% 因为 %event-damagecause% 惨叫一声醒在了自己的床上") 
+      send message "%player's name% 因为 %event-damagecause% 惨叫一声醒在了自己的床上" to {_groupid}
      
 # 劫掠转发（开始）
 on raid:
@@ -382,7 +381,7 @@ on raid:
     set {_raidText::3} to "本台记者南狐将持续为您扌"
     
     set {_result} to linkText({_raidText::*})
-    sendMessage("group","%{_groupid}%","%{_result}%")
+    send message "%{_result}%" to {_groupid}
 
 # 劫掠转发（结束）    
 on victory:
@@ -403,4 +402,4 @@ on victory:
     set {_Text::3} to "感谢您持续关注本台记者洞庭狐的报道!"
 
     set {_result} to linkText({_Text::*})
-    sendMessage("group","%{_groupid}%","%{_result}%")
+    send message "%{_result}%" to {_groupid}
