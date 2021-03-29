@@ -85,12 +85,6 @@ function getConfigList(name: text) :: objects:
     set {_result::1} to "null"
     return {_result::*}
 
-function sendMessage(type: text ,id: text ,message: text):
-  if {_type} is "group":
-    send bot message {_message} to group {_id}
-  else:
-    send bot message {_message} to friend {_id}
-
 function isInList(code: text ,type: text) :: boolean:
   set {_configPath} to "plugins/KitFox/config.yml"
   load yml {_configPath} as {_configPath}
@@ -133,6 +127,7 @@ on load:
   set {_admin::*} to getConfigList("admin")
   loop {_admin::*}:
     sendMessage("friend","%loop-value%","南狐 已苏醒")
+    send message "南狐 已苏醒" to loop-value
   
 # 当脚本被关闭时  
 on unload:
@@ -141,7 +136,7 @@ on unload:
 # 当服务器启动完成时  
 on server start:
   set {_groupid} to getConfigValue("main-group")
-  sendMessage("group","%{_groupid}%","KittenCraft 已苏醒")
+  send message "KittenCraft 已苏醒" to {_groupid}
 
 # 当服务器关闭时
 on server stop:
@@ -154,11 +149,11 @@ on bot receive message:
   set {_prefix} to getConfigValue("command-prefix")
   set {_silent} to getConfigValue("silent-mode")
   if isResponsable("%group-code%") is true: # 群聊隔离
-    set {_argument::*} to bot message split by " " # 指令分割
+    set {_argument::*} to bot-message's content split by " " # 指令分割
     if {_argument::1} is {_prefix}: #命令前缀
     # 核心指令：
       if {_argument::2} is "version":
-        bot reply "本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！"
+        reply "本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！"
       if {_argument::2} is "help":
         set {_helptext::0} to "南狐现在能听懂以下命令：%nl%"
         set {_helptext::1} to "version    显示南狐版本号%nl%"
@@ -174,18 +169,18 @@ on bot receive message:
         set {_helptext::11} to "remote [request]  向面板发送请求，需要面板支持"
         
         set {_result} to linkText({_helptext::*})
-        bot reply "%{_result}%"
+        reply "%{_result}%"
       if {_argument::2} is "reload":
         if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
           if {_silent} is "false":
-            bot reply "南狐正在重载~"
+            reply "南狐正在重载~"
           set {buildTimes} to {buildTimes}+1 # 增加版本计次
           set {lastVersion} to "{@version}"
           wait 1 second #避免报错
           reload skript "KitFox"
         else:
           if {_silent} is "false":
-            bot reply "本南狐傲娇到不让你执行命令！"
+            reply "本南狐傲娇到不让你执行命令！"
     # 基本指令
       if {_argument::2} is "gift":
         if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
@@ -201,66 +196,66 @@ on bot receive message:
           chance of 1%:
             broadcast "[Skript] Reloading KitFox.sk"
           if {_silent} is "false":  
-            bot reply "南狐已经将礼物送到各位背包中了哟~"
+            reply "南狐已经将礼物送到各位背包中了哟~"
           broadcast "南狐已经将礼物送到各位背包中了哟,请注意查收~"
         else:
-          bot reply "本南狐傲娇到不让你执行命令！"
+          reply "本南狐傲娇到不让你执行命令！"
       if {_argument::2} is "ban":
         if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
           command "/tempban %{_argument::3}% %{_argument::4}%d %{_argument::5}%" by console
           if {_silent} is false:
-            bot reply "封禁成功！"
+            reply "封禁成功！"
           sendMessage("group","%{_groupid}%","玩家%{_argument::3}%因为%{_argument::4}%被管理员封禁%{_argument::5}%天，希望各位以此为戒！")
         else:
           if {_silent} is "false":
-            bot reply "本南狐傲娇到不让你执行命令！"
+            reply "本南狐傲娇到不让你执行命令！"
       if {_argument::2} is "reg":
         if isInList(qq,"helper") is true:# 检测指令发送者是否有执行权限
           if AuthMeApi.getInstance().isRegistered({_argument::3}) is false:
             command "/authme register %{_argument::3}% %{_argument::4}%" by console
             if AuthMeApi.getInstance().isRegistered({_argument::3}) is false:
-              bot reply "噔噔咚 注册失败 请检查用户名和密码是否合法"
+              reply "噔噔咚 注册失败 请检查用户名和密码是否合法"
             else:
-              bot reply "这个玩家已被南狐成功注册！"
+              reply "这个玩家已被南狐成功注册！"
               sendMessage("group","%{_groupid}%","管理员%qq%注册了用户：%{_argument::3}%")
           else:
-            bot reply "这个玩家已经被其他管理员注册过啦！"
+            reply "这个玩家已经被其他管理员注册过啦！"
         else:
           if {_silent} is "false":
-            bot reply "本南狐傲娇到不让你执行命令！"
+            reply "本南狐傲娇到不让你执行命令！"
       if {_argument::2} is "broadcast":
         if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
           set {_prefix} to (length of {_argument::1})+1+(length of {_argument::2})+2
           set {_message} to subtext of bot message from characters {_prefix} to length of bot message
           broadcast "%{_message}%"
           if {_silent} is "false":
-            bot reply "南狐已将服务器玩家吼了一遍啦"
+            reply "南狐已将服务器玩家吼了一遍啦"
         else:
           if {_silent} is "false":
-            bot reply "本南狐傲娇到不让你执行命令！"
+            reply "本南狐傲娇到不让你执行命令！"
       if {_argument::2} is "maintenance":
         if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
           if {_argument::3} is "on":
             command "/maintenance on" by console
             if {_silent} is "false":
-              bot reply "南狐已将服务器叼走了哟~"
+              reply "南狐已将服务器叼走了哟~"
           else if {_argument::3} is "off":
             command "/maintenance off" by console
             if {_silent} is "false":
-              bot reply "南狐已将服务器叼回来啦！"
+              reply "南狐已将服务器叼回来啦！"
         else:
           if {_silent} is "false":
-            bot reply "本南狐傲娇到不让你执行命令！"
+            reply "本南狐傲娇到不让你执行命令！"
       if {_argument::2} is "run":
         if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
           set {_prefix} to (length of {_argument::1})+1+(length of {_argument::2})+2
           set {_command} to subtext of bot message from characters {_prefix} to length of bot message
           command "/%{_command}%" by console
           if {_silent} is "false":
-            bot reply "南狐已将指令扔进服务器中了哟~"
+            reply "南狐已将指令扔进服务器中了哟~"
         else:
           if {_silent} is "false":
-            bot reply "本南狐傲娇到不让你执行命令！"
+            reply "本南狐傲娇到不让你执行命令！"
       if {_argument::2} is "info":
         set {_infotext::0} to "KittenCraft 运行中！%nl%"
         set {_infotext::1} to "在线玩家：%placeholder ""playerlist_online,normal,yes,list""%%nl%"
@@ -269,13 +264,13 @@ on bot receive message:
         set {_infotext::4} to "服务器TPS：%tps%"
         
         set {_result} to linkText({_infotext::*})
-        bot reply "%{_result}%"
+        reply "%{_result}%"
       if {_argument::2} is "remote":
         if isInList(qq,"admin") is true:# 检测指令发送者是否有执行权限
-          bot reply "连不上，滚"
+          reply "连不上，滚"
         else:
           if {_silent} is "false":
-            bot reply "本南狐傲娇到不让你执行命令！"   
+            reply "本南狐傲娇到不让你执行命令！"   
       
 # 当机器人收到消息时（群聊消息转发部分）
 on bot receive message:
@@ -292,7 +287,7 @@ on chat:
   set {_groupid} to getConfigValue("main-group")
   set {_cf} to getConfigValue("chat-forward")
   if {_cf} is "true":
-    sendMessage("group","%{_groupid}%","[服务器]%player's name%: %message%")
+    send message "[服务器]%player's name%: %message%" to {_groupid}
 
 # 当玩家完成某个成就时
 # Todo：换用yaml进行成就翻译
@@ -306,7 +301,7 @@ on PlayerAdvancementDoneEvent:
       stop
     else:
       set {_advancementStr} to placeholder "AdvancementTranslate_%{_advancement}%"
-      sendMessage("group","%{_groupid}%","玩家%{_player}%获得了成就 [%{_advancementStr}%]")
+      send message "玩家%{_player}%获得了成就 [%{_advancementStr}%]" to {_groupid}
     
 # 当玩家离开时
 on quit:
@@ -316,9 +311,9 @@ on quit:
   if {_cf} is "true": # 聊天转发是否开启
     if {_vanish} is "true": # 管理员隐身是否开启
       if player is not op:
-        sendMessage("group","%{_groupid}%","%player's name% 离开了服务器")
+        send message "%player's name% 离开了服务器" to {_groupid}
     else:
-      sendMessage("group","%{_groupid}%","%player's name% 离开了服务器")
+      send message "%player's name% 离开了服务器" to {_groupid}
       
 # 当玩家加入时
 on join:
@@ -328,9 +323,9 @@ on join:
   if {_cf} is "true": # 聊天转发是否开启
     if {_vanish} is "true": # 管理员隐身是否开启
       if player is not op:
-        sendMessage("group","%{_groupid}%","%player's name% 加入了服务器")
+      send message "%player's name% 加入了服务器" to {_groupid}
     else:
-      sendMessage("group","%{_groupid}%","%player's name% 加入了服务器")
+      send message "%player's name% 加入了服务器" to {_groupid}
       
 # 死亡转发
 on death of player:
