@@ -1,38 +1,32 @@
-# KitFox.sk
+KitFox.sk
 # 依赖:
-# Skript 2.4.0 *
-# MCQQbot 1.1.1 *
-# skript-yaml 1.3.2*
-# skript-reflect 2.1.0 * 
-# skript-placeholders 1.5 *
-# AdvancementTranslate 1.1 *(请从SwallowMC的Github仓库下载)
-# AuthMe 5.6.0-SNAPSHOT 
-# Maintenance
+# Skript 2.4.0 
+# MCQQbot 2.0 
+# skript-yaml 1.3.2
+# skript-reflect 2.1.0 *
 #
 # 本skript由SwallowMC团队编写并由SinanGentoo主要维护；
 # 如果你在使用本脚本时遇到了问题，请联系我们或者在我们的Github
-# 仓库里提issue！（当然，我们更喜欢Pull request XD）
+# 仓库里发issue或pr！
+# PS：如需该脚本支持更多功能，欢迎在我们的官方仓库里下载！
 # --------------------------------------------
 
 options:
-  version: 1.1-KCLimited
+  version: 2.0
   config-version: 3
   
-import: # 需要引用的java类
-  java.lang.String as JavaString
-  org.bukkit.Raid
-  org.bukkit.Location
-  org.bukkit.entity.Player
-  org.bukkit.advancement.Advancement
-  org.bukkit.event.world.WorldEvent
-  org.bukkit.event.player.PlayerAdvancementDoneEvent
-  org.bukkit.event.raid.RaidEvent
-  org.bukkit.event.raid.RaidTriggerEvent as raid
-  org.bukkit.event.raid.RaidFinishEvent as victory
-  fr.xephi.authme.api.v3.AuthMeApi
+import:
+  org.bukkit.Bukkit
+  ch.njol.skript.Skript
+  java.lang.Runnable
+
+function FOX_executeMethod(functionName: text):
+  set {_functions::run} to function reference {_functionName}
+  set {_proxy} to new proxy instance of Runnable using {_functions::*}
+  {_proxy}.run()
   
-function createConfig():
-  set {_configPath} to "plugins/KitFox/config.yml"
+function FOX_createConfig():
+  set {_configPath} to "plugins/KitFox/config.yml" # 配置路径
   set {_example::Example} to 114514
   set {_example::anotherExample} to 1919810
   load yml {_configPath} as {_configPath}
@@ -60,7 +54,7 @@ function createConfig():
   save yml {_configPath}
   unload yml {_configPath}
   
-function getConfigValue(name: text) :: text:
+function FOX_getConfigValue(name: text) :: text:
   set {_configPath} to "plugins/KitFox/config.yml"
   if yml file {_configPath} exists:
     load yml {_configPath} as {_configPath}
@@ -72,7 +66,7 @@ function getConfigValue(name: text) :: text:
     createConfig()
     return "null"
 
-function getConfigList(name: text) :: objects:
+function FOX_getConfigList(name: text) :: objects:
   set {_configPath} to "plugins/KitFox/config.yml"
   if yml file {_configPath} exists:
     load yml {_configPath} as {_configPath}
@@ -85,52 +79,10 @@ function getConfigList(name: text) :: objects:
     set {_result::1} to "null"
     return {_result::*}
 
-function sendMessage(type: text ,id: text ,message: text):
-  if {_type} is "group":
-    send bot message {_message} to group {_id}
-  else:
-    send bot message {_message} to friend {_id}
+function FOX_sendMessage(id: text ,message: text):
+  send {_message} to {_id}
 
-function isInList(path: text ,code: text ,type: text) :: boolean:
-  set {_configPath} to {_path}
-  load yml {_configPath} as {_configPath}
-  set {_template::*} to yml list {_type} from {_configPath}
-  loop {_template::*}:
-    # message "%loop-value%" to console
-    if {_code} is "%loop-value%":
-      unload yml {_configPath}
-      return true
-  unload yml {_configPath}
-  return false
-  
-function isInNode(path: text ,code: text ,type: text) :: boolean:
-  set {_configPath} to {_path}
-  load yml {_configPath} as {_configPath}
-  loop yaml node keys {_type} from {_configPath}:
-    # message "判断%{_type}%.%{_code}%和%loop-node%" to console
-    if "%{_type}%.%{_code}%" is "%loop-node%":
-      unload yml {_configPath}
-      return true
-  unload yml {_configPath}
-  return false
-	
-function linkText(textCollection: objects) :: text:
-  set {_result} to ""
-  loop {_textCollection::*}:
-    set {_result} to "%{_result}%%loop-value%"
-  return "%{_result}%"
- 
-function isResponsable(group-code: text) :: boolean:
-  if {_group-code} is "<none>":
-    return true
-  else if isInList("plugins/KitFox/config.yml",{_group-code},"enabled-groups") is true:
-    return true
-  else:
-    return false
-  
 # --------------------------------------------
-
-# 当脚本被启动时
 on load:
   if "{@version}" is not "%{lastVersion}%":
     set {buildTimes} to 1
@@ -143,310 +95,6 @@ on load:
     createConfig()
   if getConfigValue("config-version") is not "{@config-version}":
     message "[KitFox] 哎呀……这个配置文件发霉了……或许你应该重新生成一下？" to console
-  set {_admin::*} to getConfigList("admin")
-  loop {_admin::*}:
+  set {FOX_Operator::*} to getConfigList("admin")
+  loop {FOX_Operator::*}:
     sendMessage("friend","%loop-value%","南狐 已苏醒")
-  
-# 当脚本被关闭时  
-on unload:
-  message "[KitFox] 南狐 关闭中……" to console
-  
-# 当服务器启动完成时  
-on server start:
-  set {_groupid} to getConfigValue("main-group")
-  sendMessage("group","%{_groupid}%","KittenCraft 已苏醒")
-
-# 当服务器关闭时
-on server stop:
-  set {_groupid} to getConfigValue("main-group")
-  sendMessage("group","%{_groupid}%","KittenCraft 麻了")
-
-on member join group:
-  set {_groupid} to getConfigValue("main-group")
-  sendMessage("group","%{_groupid}%","欢迎来到KittenCraft！进入服务器前确保您已阅读玩家守则。进入服务器前请先输入!fox bind [您的用户名]来进行用户名绑定！")
-
-# 当机器人收到消息时(命令执行部分)
-on bot receive message:
-  set {_configPath} to "plugins/KitFox/config.yml"
-  set {_groupid} to getConfigValue("main-group")
-  set {_prefix} to getConfigValue("command-prefix")
-  set {_silent} to getConfigValue("silent-mode")
-  if isResponsable("%group-code%") is true: # 群聊隔离
-    set {_argument::*} to bot message split by " " # 指令分割
-    if {_argument::1} is {_prefix}: #命令前缀
-    # 核心指令：
-      if {_argument::2} is "version":
-        bot reply "本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！"
-      if {_argument::2} is "help":
-        set {_helptext::0} to "南狐现在能听懂以下命令：%nl%"
-        set {_helptext::1} to "version    显示南狐版本号%nl%"
-        set {_helptext::2} to "help     显示南狐可用指令%nl%"
-        set {_helptext::3} to "reload    重载南狐%nl%"
-        set {_helptext::4} to "info     显示服务器状态%nl%"
-        set {_helptext::5} to "stop     关闭服务器%nl%"
-        set {_helptext::6} to "run [command]  隔空发送指令%nl%"
-        set {_helptext::7} to "reg [qq] [username] [pass] [relative] 给玩家开账号%nl%"
-        set {_helptext::8} to "unreg [username]    账号吞噬者 已苏醒%nl%"
-        set {_helptext::9} to "cp [username] [pass]   给玩家改密%nl%"
-        set {_helptext::10} to "ban [username] [time] [reason] 封禁玩家%nl%"
-        set {_helptext::11} to "maintenance <on/off>  维护模式%nl%"
-        set {_helptext::12} to "broadcast [message]  你吼辣么大声干什么啊%nl%"
-        set {_helptext::13} to "remote [request]  向面板发送请求，需要面板支持%nl%"
-        set {_helptext::14} to "bind [username]  绑定用户"
-        
-        set {_result} to linkText({_helptext::*})
-        bot reply "%{_result}%"
-      if {_argument::2} is "reload":
-        if isInList({_configPath},qq,"admin") is true:# 检测指令发送者是否有执行权限
-          if {_silent} is "false":
-            bot reply "南狐正在重载~"
-          set {buildTimes} to {buildTimes}+1 # 增加版本计次
-          set {lastVersion} to "{@version}"
-          wait 1 second #避免报错
-          reload skript "KitFox"
-        else:
-          if {_silent} is "false":
-            bot reply "本南狐傲娇到不让你执行命令！"
-    # 基本指令
-      if {_argument::2} is "gift":
-        if isInList({_configPath},qq,"admin") is true:# 检测指令发送者是否有执行权限
-          chance of 70%:
-            command "/give @a stick 8" by console
-            command "/give @r oak_log 2" by console
-          chance of 20%:
-            command "/give @a apple 3" by console
-            command "/give @r golden_apple" by console
-          chance of 9%:
-            command "/give @a pumpkin_pie 8" by console
-            command "/give @r cake" by console
-          chance of 1%:
-            broadcast "[Skript] Reloading KitFox.sk"
-          if {_silent} is "false":  
-            bot reply "南狐已经将礼物送到各位背包中了哟~"
-          broadcast "南狐已经将礼物送到各位背包中了哟,请注意查收~"
-        else:
-          bot reply "本南狐傲娇到不让你执行命令！"
-      if {_argument::2} is "ban":
-        if isInList({_configPath},qq,"admin") is true:# 检测指令发送者是否有执行权限
-          command "/tempban %{_argument::3}% %{_argument::4}%d %{_argument::5}%" by console
-          if {_silent} is false:
-            bot reply "封禁成功！"
-          sendMessage("group","%{_groupid}%","玩家%{_argument::3}%因为%{_argument::4}%被管理员封禁%{_argument::5}%天，希望各位以此为戒！")
-        else:
-          if {_silent} is "false":
-            bot reply "本南狐傲娇到不让你执行命令！"
-      if {_argument::2} is "reg":
-        if isInList({_configPath},qq,"helper") is true:# 检测指令发送者是否有执行权限
-          if AuthMeApi.getInstance().isRegistered({_argument::4}) is false:
-            set {_userPath} to "plugins/KitFox/user.yml"
-            load yml {_userPath} as {_userPath}
-            set yaml value "player.%{_argument::3}%.playername" from {_userPath} to "%{_argument::4}%"
-            set yaml value "player.%{_argument::3}%.relative" from {_userPath} to "%{_argument::6}%"
-            save yml {_userPath}
-            unload yml {_userPath}
-            command "/authme register %{_argument::4}% %{_argument::5}%" by console
-            command "/premium %{_argument::4}%" by console
-            bot reply "这个玩家已被南狐成功注册！"
-            sendMessage("group","%{_groupid}%","管理员%qq%注册了用户：%{_argument::4}%")
-          else:
-            bot reply "这个玩家已经被其他管理员注册过啦！"
-        else:
-          if {_silent} is "false":
-            bot reply "本南狐傲娇到不让你执行命令！"
-      if {_argument::2} is "bind":
-        if "%{_argument::3}%" is not banned:# 检测指令发送者是否有执行权限
-          set {_userPath} to "plugins/KitFox/user.yml"
-          if isInNode({_userPath},qq,"player") is false:
-            load yml {_userPath} as {_userPath}
-            set yaml value "player.%qq%.playername" from {_userPath} to "%{_argument::3}%"
-            set yaml value "player.%qq%.relative" from {_userPath} to "Bind-only"
-            save yml {_userPath}
-            unload yml {_userPath}
-            command "/authme register %{_argument::3}% changed" by console
-            command "/premium %{_argument::3}%" by console
-            bot reply "账号已成功以正版模式绑定！如需要以盗版模式或基岩模式绑定，请联系管理员"
-          else:
-            bot reply "您已经绑定过啦！"
-        else:
-          bot reply "您好像已经被ban了呢……"
-      if {_argument::2} is "broadcast":
-        if isInList({_configPath},qq,"admin") is true:# 检测指令发送者是否有执行权限
-          set {_prefix} to (length of {_argument::1})+1+(length of {_argument::2})+2
-          set {_message} to subtext of bot message from characters {_prefix} to length of bot message
-          broadcast "%{_message}%"
-          if {_silent} is "false":
-            bot reply "南狐已将服务器玩家吼了一遍啦"
-        else:
-          if {_silent} is "false":
-            bot reply "本南狐傲娇到不让你执行命令！"
-      if {_argument::2} is "maintenance":
-        if isInList({_configPath},qq,"admin") is true:# 检测指令发送者是否有执行权限
-          if {_argument::3} is "on":
-            command "/maintenance on" by console
-            if {_silent} is "false":
-              bot reply "南狐已将服务器叼走了哟~"
-          else if {_argument::3} is "off":
-            command "/maintenance off" by console
-            if {_silent} is "false":
-              bot reply "南狐已将服务器叼回来啦！"
-        else:
-          if {_silent} is "false":
-            bot reply "本南狐傲娇到不让你执行命令！"
-      if {_argument::2} is "run":
-        if isInList({_configPath},qq,"admin") is true:# 检测指令发送者是否有执行权限
-          set {_prefix} to (length of {_argument::1})+1+(length of {_argument::2})+2
-          set {_command} to subtext of bot message from characters {_prefix} to length of bot message
-          command "/%{_command}%" by console
-          if {_silent} is "false":
-            bot reply "南狐已将指令扔进服务器中了哟~"
-        else:
-          if {_silent} is "false":
-            bot reply "本南狐傲娇到不让你执行命令！"
-      if {_argument::2} is "info":
-        set {_infotext::0} to "KittenCraft 运行中！%nl%"
-        set {_infotext::1} to "在线玩家：%placeholder ""playerlist_online,normal,yes,list""%%nl%"
-        set {_infotext::2} to "服务器人数：%placeholder ""server_online""%/%placeholder ""server_max_players""%%nl%"
-        set {_infotext::3} to "服务器已用内存：%placeholder ""server_ram_used""%M%nl%"
-        set {_infotext::4} to "服务器TPS：%tps%"
-        
-        set {_result} to linkText({_infotext::*})
-        bot reply "%{_result}%"
-      if {_argument::2} is "remote":
-        if isInList({_configPath},qq,"admin") is true:# 检测指令发送者是否有执行权限
-          bot reply "连不上，滚"
-        else:
-          if {_silent} is "false":
-            bot reply "本南狐傲娇到不让你执行命令！"   
-      
-# 当机器人收到消息时（群聊消息转发部分）
-on bot receive message:
-  set {_groupid} to getConfigValue("main-group") # 读取主群群号
-  set {_cf} to getConfigValue("chat-forward")
-  bot message start with "!fox":
-    stop
-  if group-code is "%{_groupid}%":
-    if {_cf} is "true":
-      broadcast "[群聊]<%sender%> %bot message%"
-      
-# 当服务器内玩家发消息时
-on chat:
-  set {_groupid} to getConfigValue("main-group")
-  set {_cf} to getConfigValue("chat-forward")
-  if {_cf} is "true":
-    sendMessage("group","%{_groupid}%","[服务器]%player's name%: %message%")
-
-# 当玩家完成某个成就时
-# Todo：换用yaml进行成就翻译
-on PlayerAdvancementDoneEvent:
-  set {_groupid} to getConfigValue("main-group")
-  set {_cf} to getConfigValue("chat-forward")
-  set {_advancement} to event.getAdvancement().getKey().toString()
-  set {_player} to event.getPlayer().getName()
-  if {_cf} is "true":
-    {_advancement} contain "recipes/":
-      stop
-    else:
-      set {_advancementStr} to placeholder "AdvancementTranslate_%{_advancement}%"
-      sendMessage("group","%{_groupid}%","玩家%{_player}%获得了成就 [%{_advancementStr}%]")
-    
-# 当玩家离开时
-on quit:
-  set {_groupid} to getConfigValue("main-group")
-  set {_cf} to getConfigValue("chat-forward")
-  set {_vanish} to getConfigValue("op-vanish")
-  if {_cf} is "true": # 聊天转发是否开启
-    if {_vanish} is "true": # 管理员隐身是否开启
-      if player is not op:
-        sendMessage("group","%{_groupid}%","%player's name% 离开了服务器")
-    else:
-      sendMessage("group","%{_groupid}%","%player's name% 离开了服务器")
-      
-# 当玩家加入时
-on join:
-  set {_groupid} to getConfigValue("main-group")
-  set {_cf} to getConfigValue("chat-forward")
-  set {_vanish} to getConfigValue("op-vanish")
-  if {_cf} is "true": # 聊天转发是否开启
-    if {_vanish} is "true": # 管理员隐身是否开启
-      if player is not op:
-        sendMessage("group","%{_groupid}%","%player's name% 加入了服务器")
-    else:
-      sendMessage("group","%{_groupid}%","%player's name% 加入了服务器")
-      
-# 死亡转发
-on death of player:
-  set {_groupid} to getConfigValue("main-group")
-  set {_cf} to getConfigValue("chat-forward")
-  if {_cf} is "true": # 聊天转发是否开启
-    if "%event-damagecause%" is "unknown":
-      sendMessage("group","%{_groupid}%","%player's name% 发现了死字的四种写法")
-    else if "%event-damagecause%" is "drowning":
-      sendMessage("group","%{_groupid}%","%player's name% 水死了")  
-    else if "%event-damagecause%" is "contact":
-      sendMessage("group","%{_groupid}%","%player's name% 遇刺身亡")
-    else if "%event-damagecause%" is "thorns":
-      sendMessage("group","%{_groupid}%","%player's name% 渣死了")  
-    else if "%event-damagecause%" is "wither":
-      sendMessage("group","%{_groupid}%","%player's name% 麻了")
-    else if "%event-damagecause%" is "projectile":
-      sendMessage("group","%{_groupid}%","%player's name% 被社保了")
-    else if "%event-damagecause%" is "void":
-      sendMessage("group","%{_groupid}%","%player's name% 被深渊吞噬")
-    else if "%event-damagecause%" is "fall":
-      sendMessage("group","%{_groupid}%","%player's name% 失足了")
-    else if "%event-damagecause%" is "burning":
-      sendMessage("group","%{_groupid}%","%player's name% 火冒三丈（物理）")
-    else if "%event-damagecause%" is "lightning":
-      sendMessage("group","%{_groupid}%","正道的光，劈在了%player's name% 上")
-    else if "%event-damagecause%" is "fire":
-      sendMessage("group","%{_groupid}%","%player's name% 成为了光")
-    else if "%event-damagecause%" is "sweep attack":
-      sendMessage("group","%{_groupid}%","%player's name% 猛吸了口剑气")
-    else if "%event-damagecause%" is "potion":
-      sendMessage("group","%{_groupid}%","%player's name% 成为了白雪公主！")
-    else if "%event-damagecause%" is "entity explosion":
-      sendMessage("group","%{_groupid}%","%player's name% 被干爆了")
-    else if "%event-damagecause%" is "attack":
-      sendMessage("group","%{_groupid}%","%player's name% 大意了，没有闪")
-    else if "%event-damagecause%" is "lava":
-      sendMessage("group","%{_groupid}%","%player's name% 觉得这温泉不对劲")
-    else:
-      sendMessage("group","%{_groupid}%","%player's name% 因为 %event-damagecause% 惨叫一声醒在了自己的床上") 
-     
-# 劫掠转发（开始）
-on raid:
-  set {_groupid} to getConfigValue("main-group")
-  set {_cf} to getConfigValue("chat-forward")
-  if {_cf} is "true": # 聊天转发是否开启
-    set {_raidlevel} to event.getRaid().getBadOmenLevel()
-    set {_posx} to event.getRaid().getLocation().getBlockX()
-    set {_posy} to event.getRaid().getLocation().getBlockY()
-    set {_posz} to event.getRaid().getLocation().getBlockZ()
-    set {_raidText::0} to "主世界正在发生一起劫掠事件！%nl%"
-    set {_raidText::1} to "劫掠级别：%{_raidlevel}%%nl%"
-    set {_raidText::2} to "劫掠地点：（x：%{_posx}% y：%{_posy}% z：%{_posz}%）%nl%"
-    set {_raidText::3} to "本台记者南狐将持续为您扌"
-    
-    set {_result} to linkText({_raidText::*})
-    sendMessage("group","%{_groupid}%","%{_result}%")
-
-# 劫掠转发（结束）    
-on victory:
-  set {_groupid} to getConfigValue("main-group")
-  set {_cf} to getConfigValue("chat-forward")
-  if {_cf} is "true": # 聊天转发是否开启
-    set {_ticks} to event.getRaid().getActiveTicks()
-    set {_posx} to event.getRaid().getLocation().getBlockX()
-    set {_posy} to event.getRaid().getLocation().getBlockY()
-    set {_posz} to event.getRaid().getLocation().getBlockZ()
-    set {_level} to event.getRaid().getBadOmenLevel()
-    set {_status} to event.getRaid().getStatus()
-    set {_group_count} to event.getRaid().getTotalGroups()
-
-    set {_Text::0} to "路边社报道，一场%{_level}%级的袭击刚刚结束！%nl%"
-    set {_Text::1} to "经过了%{_ticks}%刻的斗争，这次袭击的结果是：%{_status}%！%nl%"
-    set {_Text::2} to "刚才有%{_group_count}%波掠夺者，"
-    set {_Text::3} to "感谢您持续关注本台记者洞庭狐的报道!"
-
-    set {_result} to linkText({_Text::*})
-    sendMessage("group","%{_groupid}%","%{_result}%")
