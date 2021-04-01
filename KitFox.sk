@@ -1,4 +1,4 @@
-KitFox.sk
+# KitFox.sk
 # 依赖:
 # Skript 2.4.0 
 # MCQQbot 2.0 
@@ -20,6 +20,7 @@ import:
   ch.njol.skript.Skript
   java.lang.Runnable
 
+# 核心函数
 function FOX_executeMethod(functionName: text):
   set {_functions::run} to function reference {_functionName}
   set {_proxy} to new proxy instance of Runnable using {_functions::*}
@@ -63,7 +64,7 @@ function FOX_getConfigValue(name: text) :: text:
     return "%{_result}%"
   else:
     message "[KitFox] 没有找到配置文件呢…不过南狐会帮你创建一个哒！" to console
-    createConfig()
+    FOX_createConfig()
     return "null"
 
 function FOX_getConfigList(name: text) :: objects:
@@ -75,13 +76,16 @@ function FOX_getConfigList(name: text) :: objects:
     return {_result::*}
   else:
     message "[KitFox] 没有找到配置文件呢…不过南狐会帮你创建一个哒！" to console
-    createConfig()
+    FOX_createConfig()
     set {_result::1} to "null"
     return {_result::*}
 
 function FOX_sendMessage(id: text ,message: text):
   send {_message} to {_id}
 
+# 主函数
+function registerCoreFunction():
+  
 # --------------------------------------------
 on load:
   if "{@version}" is not "%{lastVersion}%":
@@ -92,9 +96,26 @@ on load:
     message "[KitFox] 配置文件加载成功！" to console
   else:
     message "[KitFox] 没有找到配置文件呢…不过南狐会帮你创建一个哒！" to console
-    createConfig()
-  if getConfigValue("config-version") is not "{@config-version}":
+    FOX_createConfig()
+  if FOX_getConfigValue("config-version") is not "{@config-version}":
     message "[KitFox] 哎呀……这个配置文件发霉了……或许你应该重新生成一下？" to console
-  set {FOX_Operator::*} to getConfigList("admin")
+  set {FOX_Operator::*} to FOX_getConfigList("admin")
   loop {FOX_Operator::*}:
-    sendMessage("friend","%loop-value%","南狐 已苏醒")
+    FOX_sendMessage("%loop-value%","南狐 已苏醒")
+    
+# 当脚本被关闭时  
+on unload:
+  message "[KitFox] 南狐 关闭中……" to console
+  
+# 当服务器启动完成时  
+on server start:
+  set {_groupid} to FOX_getConfigValue("main-group")
+  FOX_sendMessage("group","%{_groupid}%","KittenCraft 已苏醒")
+
+# 当服务器关闭时
+on server stop:
+  set {_groupid} to FOX_getConfigValue("main-group")
+  FOX_sendMessage("group","%{_groupid}%","KittenCraft 麻了")
+  
+# 当机器人收到群聊时(命令执行部分)
+on bot receive group message:
