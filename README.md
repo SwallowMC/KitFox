@@ -1,2 +1,15 @@
+# 项目正在为最新版的McQQBot进行重写工作，如需测试请切换分支至DEV/2.0!
 # KitFox
-A QQ bot script using skript and mcqqbot KittenCraft's minecraft server and QQ group
+一个使用Skript实现的Minecraft-QQ机器人。
+## 已支持的功能
+- [x] 聊天转发
+- [x] 玩家死亡转发
+- [x] 玩家成就转发
+- [x] 劫掠事件转发
+- [x] 服务器开启/关闭提示
+- [x] QQ内发送指令至控制台
+- [x] 远程开关维护模式 *
+- [x] 服务器内账号注册 *
+- [x] 附加小指令 
+
+标注*即需要插件支持
