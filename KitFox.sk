@@ -1,7 +1,7 @@
 # KitFox.sk
 # 依赖:
 # Skript 2.4.0 
-# MCQQbot 2.0 
+# McQQbot 2.0 
 # skript-yaml 1.3.2
 # skript-reflect 2.1.0 *
 #
@@ -21,8 +21,8 @@ import:
   java.lang.Runnable
 
 # 核心函数
-function FOX_executeMethod(functionName: text):
-  set {_functions::run} to function reference {_functionName}
+function FOX_executeMethod(functionName: text, info: objects):
+  set {_functions::run} to function reference {_functionName} called with argument  {_info}
   set {_proxy} to new proxy instance of Runnable using {_functions::*}
   {_proxy}.run()
   
@@ -131,15 +131,19 @@ function FOX_registerCommand(name: text, function: text, description: text):
     unload yml {_registeredCommandPath}
 # 主函数
 function FOX_registerCoreCommand():
-  FOX_registerCommand("version","showVersion","显示南狐版本")
-  FOX_registerCommand("help","showHelpText","显示所有南狐可执行的命令")
-  FOX_registerCommand("reload","reloadKitFox","重载南狐")
-  FOX_registerCommand("run","executeCommand","向服务器控制台发送指令")
-  FOX_registerCommand("broadcast","brocastMessage","向服务器发送广播")
+  FOX_registerCommand("version","FOX_showVersion","显示南狐版本")
+  FOX_registerCommand("help","FOX_showHelpText","显示所有南狐可执行的命令")
+  FOX_registerCommand("reload","FOX_eloadKitFox","重载南狐")
+  FOX_registerCommand("run","FOX_executeCommand","向服务器控制台发送指令")
+  FOX_registerCommand("broadcast","FOX_brocastMessage","向服务器发送广播")
+
+  function FOX_showVersion(type: text, code: text, content: text):
+    FOX_sendMessage({_group},{_code},"本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
 # -------------------------------------------------------
 on load:
   set {FOX_loading} to true
   if "{@version}" is not "%{lastVersion}%":
+    set {lastVersion} to {@version}
     set {buildTimes} to 1
   message "[KitFox] 南狐(版本：{@version}-build%{buildTimes}%)启动中……" to console
   set {_configPath} to "plugins/KitFox/config.yml"
@@ -182,11 +186,13 @@ on bot receive group message:
   set {_silent} to FOX_getConfigValue("silent-mode")
   if FOX_isInList("plugins/KitFox/config.yml","%{qq-group's id}%","enabled-groups") is true: # 启用群聊
   load yml {_registeredCommandPath} as {_registeredCommandPath}
-    set {_argument::*} to bot-message's content split by " " # 指令分割
-    if {_argument::1} is {_prefix}: # 命令前缀
+    bot-message's content started with {_prefix}: # 命令前缀
       if isInNode({_registeredCommandPath},{_argument::2},"registered") is true:
-      set {_targetFunction} to yaml value "registered.%{_argument::2}%.function" from "plugins/skript-yaml/teleport.yml"
-        FOX_executeMethod("%{_targetFunction}%")
+        set {_targetFunction} to yaml value "registered.%{_argument::2}%.function" from "plugins/KitFox/registeredCommand.yml"
+        set {_messageInfo::type} to "group"
+        set {_messageInfo::code} to "%{qq-group's id}%"
+        set {_messageInfo::content} to bot-message's content
+        FOX_executeMethod("%{_targetFunction}%",{_messageInfo::*})
       else:
         quote reply "命令不存在!"
         unload yml {_registeredCommandPath}
