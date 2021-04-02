@@ -82,9 +82,16 @@ function FOX_getConfigList(name: text) :: objects:
     set {_result::1} to "null"
     return {_result::*}
 
-function FOX_sendMessage(id: text ,message: text):
-  set {_id} to {_id} parsed as number
-  send {_message} to (group 1043731523 of "Main" bot)
+function FOX_sendMessage(type:text ,id: text ,message: text):
+  # set {_id} to {_id} parsed as long
+  set {_activeBot} to FOX_getConfigValue("active-account")
+  # if type is "group":
+  #   send {_message} to group {_id} of {_activeBot} bot
+  # else:
+  #   send {_message} to friend {_id} of {_activeBot} bot
+  # 我要杀了这个API开发者
+  message "/mcqqbot send %{_type}% %{_activeBot}% %{_id}% %{_message}%" to console
+  command "/mcqqbot send %{_type}% %{_activeBot}% %{_id}% %{_message}%" by console
 
 function FOX_isInList(path: text ,code: text ,type: text) :: boolean:
   set {_configPath} to {_path}
@@ -115,46 +122,71 @@ function FOX_linkText(textCollection: objects) :: text:
     set {_result} to "%{_result}%%loop-value%"
   return "%{_result}%"
   
+function FOX_registerCommand(name: text, function: text, description: text):
+    set {_registeredCommandPath} to "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml"
+    load yml {_registeredCommandPath} as {_registeredCommandPath}
+    set yaml value "registered.%{_name}%.function" from {_registeredCommandPath} to "%{_function}%"
+    set yaml value "registered.%{_name}%.description" from {_registeredCommandPath} to "%{_description}%"
+    save yml {_registeredCommandPath}
+    unload yml {_registeredCommandPath}
 # 主函数
-function FOX_registerCoreFunction():
-  
-# --------------------------------------------
+function FOX_registerCoreCommand():
+  FOX_registerCommand("version","showVersion","显示南狐版本")
+  FOX_registerCommand("help","showHelpText","显示所有南狐可执行的命令")
+  FOX_registerCommand("reload","reloadKitFox","重载南狐")
+  FOX_registerCommand("run","executeCommand","向服务器控制台发送指令")
+  FOX_registerCommand("broadcast","brocastMessage","向服务器发送广播")
+# -------------------------------------------------------
 on load:
+  set {FOX_loading} to true
   if "{@version}" is not "%{lastVersion}%":
     set {buildTimes} to 1
   message "[KitFox] 南狐(版本：{@version}-build%{buildTimes}%)启动中……" to console
   set {_configPath} to "plugins/KitFox/config.yml"
+  set {_registeredCommandPath} to "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml"
+  if yml file {_registeredCommandPath} exists: # 检测因为神秘原因没有被正常删除的注册命令文件是否存在
+    delete yml {_registeredCommandPath}
   if yml file {_configPath} exists: # 检测配置文件是否存在
     message "[KitFox] 配置文件加载成功！" to console
   else:
-    message "[KitFox] 没有找到配置文件呢…不过南狐会帮你创建一个哒！" to console
+    message "[KitFox] 正在生成配置文件..." to console
     FOX_createConfig()
   if FOX_getConfigValue("config-version") is not "{@config-version}":
-    message "[KitFox] 哎呀……这个配置文件发霉了……或许你应该重新生成一下？" to console
+    message "[KitFox] 配置文件过旧！或许你应该删掉他然后重建" to console
   set {FOX_Operator::*} to FOX_getConfigList("admin")
   loop {FOX_Operator::*}:
-    FOX_sendMessage("%loop-value%","南狐 已苏醒")
-    
+    FOX_sendMessage("friend","%loop-value%","南狐已启动！")
+    set {FOX_loading} to false
+
 # 当脚本被关闭时  
 on unload:
+  delete yml "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml" # 删除存在的命令注册缓存
   message "[KitFox] 南狐 关闭中……" to console
   
 # 当服务器启动完成时  
 on server start:
   set {_groupid} to FOX_getConfigValue("main-group")
-  FOX_sendMessage("%{_groupid}%","KittenCraft 已苏醒")
+  FOX_sendMessage("group",{_groupid},"服务器已启动！")
 
 # 当服务器关闭时
 on server stop:
   set {_groupid} to FOX_getConfigValue("main-group")
-  FOX_sendMessage("%{_groupid}%","KittenCraft 麻了")
+  FOX_sendMessage("group",{_groupid},"服务器已关闭！")
   
 # 当机器人收到群聊时(命令执行部分)
 on bot receive group message:
   set {_configPath} to "plugins/KitFox/config.yml"
+  set {_registeredCommandPath} to "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml"
   set {_groupid} to FOX_getConfigValue("main-group")
   set {_prefix} to FOX_getConfigValue("command-prefix")
   set {_silent} to FOX_getConfigValue("silent-mode")
   if FOX_isInList("plugins/KitFox/config.yml","%{qq-group's id}%","enabled-groups") is true: # 启用群聊
+  load yml {_registeredCommandPath} as {_registeredCommandPath}
     set {_argument::*} to bot-message's content split by " " # 指令分割
     if {_argument::1} is {_prefix}: # 命令前缀
+      if isInNode({_registeredCommandPath},{_argument::2},"registered") is true:
+      set {_targetFunction} to yaml value "registered.%{_argument::2}%.function" from "plugins/skript-yaml/teleport.yml"
+        FOX_executeMethod("%{_targetFunction}%")
+      else:
+        quote reply "命令不存在!"
+        unload yml {_registeredCommandPath}
