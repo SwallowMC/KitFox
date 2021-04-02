@@ -137,8 +137,8 @@ function FOX_registerCoreCommand():
   FOX_registerCommand("run","FOX_executeCommand","向服务器控制台发送指令")
   FOX_registerCommand("broadcast","FOX_brocastMessage","向服务器发送广播")
 
-  function FOX_showVersion(type: text, code: text, content: text):
-    FOX_sendMessage({_group},{_code},"本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
+function FOX_showVersion(type: text, code: text, content: text):
+  FOX_sendMessage({_group},{_code},"本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
 # -------------------------------------------------------
 on load:
   set {FOX_loading} to true
@@ -185,14 +185,12 @@ on bot receive group message:
   set {_prefix} to FOX_getConfigValue("command-prefix")
   set {_silent} to FOX_getConfigValue("silent-mode")
   if FOX_isInList("plugins/KitFox/config.yml","%{qq-group's id}%","enabled-groups") is true: # 启用群聊
-  load yml {_registeredCommandPath} as {_registeredCommandPath}
-    bot-message's content started with {_prefix}: # 命令前缀
-      if isInNode({_registeredCommandPath},{_argument::2},"registered") is true:
-        set {_targetFunction} to yaml value "registered.%{_argument::2}%.function" from "plugins/KitFox/registeredCommand.yml"
-        set {_messageInfo::type} to "group"
-        set {_messageInfo::code} to "%{qq-group's id}%"
-        set {_messageInfo::content} to bot-message's content
-        FOX_executeMethod("%{_targetFunction}%",{_messageInfo::*})
-      else:
-        quote reply "命令不存在!"
-        unload yml {_registeredCommandPath}
+  bot-message's content start with {_prefix}: # 命令前缀
+    if isInNode({_registeredCommandPath} ,{_argument::2},"registered") is true:
+      set {_targetFunction} to yml value "registered.%{_argument::2}%.function" from {_registeredCommandPath} 
+      set {_messageInfo::type} to "group"
+      set {_messageInfo::code} to "%{qq-group's id}%"
+      set {_messageInfo::content} to bot-message's content
+      FOX_executeMethod("%{_targetFunction}%",{_messageInfo::*})
+    else:
+      quote reply "命令不存在!"
