@@ -13,7 +13,7 @@
 
 options:
   version: 2.0
-  config-version: 3
+  config-version: 4
   
 import:
   org.bukkit.Bukkit
@@ -34,16 +34,18 @@ function FOX_createConfig():
   
   set yml value "config-version" from {_configPath} to {@config-version}
   set the comments of yaml node "config-version" from {_configPath} to "请不要修改！"
+  set yml value "main-group" from {_configPath} to 12306
+  set the comments of yaml node "main-group" from {_configPath} to "机器人的主要工作群聊（群聊转发，广播等）"
+  set yml value "active-account" from {_configPath} to "Main"
+  set the comments of yaml node "active-account" from {_configPath} to "机器人使用的账号名字，参照MCQQBot的config内容"
+  set yml value "command-prefix" from {_configPath} to "!fox"
+  set the comments of yaml node "command-prefix" from {_configPath} to "机器人命令前缀（不可有空格）"
+  set yml value "remote-secret" from {_configPath} to "!fox"
   set yml value "chat-forward" from {_configPath} to true
   set the comments of yaml node "chat-forward" from {_configPath} to "选择是否要开启聊天转发"
   set yml value "op-vanish" from {_configPath} to true
   set the comments of yaml node "op-vanish" from {_configPath} to "是否不提示管理员在线" and "使用此项时请确保聊天转发已经开启！" 
   set yml value "silent-mode" from {_configPath} to false
-  set yml value "main-group" from {_configPath} to 12306
-  set the comments of yaml node "main-group" from {_configPath} to "机器人的主要工作群聊（群聊转发，广播等）"
-  set yml value "command-prefix" from {_configPath} to "!fox"
-  set the comments of yaml node "command-prefix" from {_configPath} to "机器人命令前缀（不可有空格）"
-  set yml value "remote-secret" from {_configPath} to "!fox"
   set the comments of yaml node "remote-secret" from {_configPath} to "用于远程控制服务器，需要MCSM面板的支持"
   set yml list "enabled-groups" from {_configPath} to {_example::*}
   set the comments of yaml node "enabled-groups" from {_configPath} to "哪些群可以执行机器人命令"
@@ -81,10 +83,40 @@ function FOX_getConfigList(name: text) :: objects:
     return {_result::*}
 
 function FOX_sendMessage(id: text ,message: text):
-  send {_message} to {_id}
+  set {_id} to {_id} parsed as number
+  send {_message} to (group 1043731523 of "Main" bot)
 
+function FOX_isInList(path: text ,code: text ,type: text) :: boolean:
+  set {_configPath} to {_path}
+  load yml {_configPath} as {_configPath}
+  set {_template::*} to yml list {_type} from {_configPath}
+  loop {_template::*}:
+    # message "%loop-value%" to console
+    if {_code} is "%loop-value%":
+      unload yml {_configPath}
+      return true
+  unload yml {_configPath}
+  return false
+  
+function FOX_isInNode(path: text ,code: text ,type: text) :: boolean:
+  set {_configPath} to {_path}
+  load yml {_configPath} as {_configPath}
+  loop yaml node keys {_type} from {_configPath}:
+    # message "判断%{_type}%.%{_code}%和%loop-node%" to console
+    if "%{_type}%.%{_code}%" is "%loop-node%":
+      unload yml {_configPath}
+      return true
+  unload yml {_configPath}
+  return false
+	
+function FOX_linkText(textCollection: objects) :: text:
+  set {_result} to ""
+  loop {_textCollection::*}:
+    set {_result} to "%{_result}%%loop-value%"
+  return "%{_result}%"
+  
 # 主函数
-function registerCoreFunction():
+function FOX_registerCoreFunction():
   
 # --------------------------------------------
 on load:
@@ -110,12 +142,19 @@ on unload:
 # 当服务器启动完成时  
 on server start:
   set {_groupid} to FOX_getConfigValue("main-group")
-  FOX_sendMessage("group","%{_groupid}%","KittenCraft 已苏醒")
+  FOX_sendMessage("%{_groupid}%","KittenCraft 已苏醒")
 
 # 当服务器关闭时
 on server stop:
   set {_groupid} to FOX_getConfigValue("main-group")
-  FOX_sendMessage("group","%{_groupid}%","KittenCraft 麻了")
+  FOX_sendMessage("%{_groupid}%","KittenCraft 麻了")
   
 # 当机器人收到群聊时(命令执行部分)
 on bot receive group message:
+  set {_configPath} to "plugins/KitFox/config.yml"
+  set {_groupid} to FOX_getConfigValue("main-group")
+  set {_prefix} to FOX_getConfigValue("command-prefix")
+  set {_silent} to FOX_getConfigValue("silent-mode")
+  if FOX_isInList("plugins/KitFox/config.yml","%{qq-group's id}%","enabled-groups") is true: # 启用群聊
+    set {_argument::*} to bot-message's content split by " " # 指令分割
+    if {_argument::1} is {_prefix}: # 命令前缀
