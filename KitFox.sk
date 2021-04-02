@@ -90,7 +90,7 @@ function FOX_sendMessage(type:text ,id: text ,message: text):
   # else:
   #   send {_message} to friend {_id} of {_activeBot} bot
   # 我要杀了这个API开发者
-  message "/mcqqbot send %{_type}% %{_activeBot}% %{_id}% %{_message}%" to console
+  # message "/mcqqbot send %{_type}% %{_activeBot}% %{_id}% %{_message}%" to console
   command "/mcqqbot send %{_type}% %{_activeBot}% %{_id}% %{_message}%" by console
 
 function FOX_isInList(path: text ,code: text ,type: text) :: boolean:
@@ -156,7 +156,7 @@ on load:
     message "[KitFox] 正在生成配置文件..." to console
     FOX_createConfig()
   if FOX_getConfigValue("config-version") is not "{@config-version}":
-    message "[KitFox] 配置文件过旧！或许你应该删掉他然后重建" to console
+    message "[KitFox] 配置文件过旧！或许你应该删掉他然后重建？" to console
   set {FOX_Operator::*} to FOX_getConfigList("admin")
   loop {FOX_Operator::*}:
     FOX_sendMessage("friend","%loop-value%","南狐已启动！")
@@ -186,11 +186,11 @@ on bot receive group message:
   set {_silent} to FOX_getConfigValue("silent-mode")
   if FOX_isInList("plugins/KitFox/config.yml","%{qq-group's id}%","enabled-groups") is true: # 启用群聊
   bot-message's content start with {_prefix}: # 命令前缀
-    if isInNode({_registeredCommandPath} ,{_argument::2},"registered") is true:
+    if FOX_isInNode({_registeredCommandPath} ,{_argument::2},"registered") is true:
       set {_targetFunction} to yml value "registered.%{_argument::2}%.function" from {_registeredCommandPath} 
       set {_messageInfo::type} to "group"
       set {_messageInfo::code} to "%{qq-group's id}%"
       set {_messageInfo::content} to bot-message's content
       FOX_executeMethod("%{_targetFunction}%",{_messageInfo::*})
     else:
-      quote reply "命令不存在!"
+      reply "命令不存在！"
