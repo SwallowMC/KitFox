@@ -22,7 +22,7 @@ import:
 
 # 核心函数
 function FOX_executeMethod(functionName: text, info: objects):
-  set {_functions::run} to function reference {_functionName} called with argument  {_info}
+  set {_functions::run} to function reference {_functionName} called with argument  {_info::*}
   set {_proxy} to new proxy instance of Runnable using {_functions::*}
   {_proxy}.run()
   
@@ -134,12 +134,27 @@ function FOX_registerCommand(name: text, function: text, description: text):
 function FOX_registerCoreCommand():
   FOX_registerCommand("version","FOX_showVersion","显示南狐版本")
   FOX_registerCommand("help","FOX_showHelpText","显示所有南狐可执行的命令")
-  FOX_registerCommand("reload","FOX_eloadKitFox","重载南狐")
+  FOX_registerCommand("reload","FOX_reloadKitFox","重载南狐")
   FOX_registerCommand("run","FOX_executeCommand","向服务器控制台发送指令")
   FOX_registerCommand("broadcast","FOX_brocastMessage","向服务器发送广播")
 
-function FOX_showVersion(type: text, code: text, content: text):
+function FOX_showVersion(type: text, code: text, content: text, sender: text):
   FOX_sendMessage({_group},{_code},"本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
+
+function FOX_showHelpText(type: text, code: text, content: text):
+
+
+function FOX_reloadKitFox(type: text, code: text, content: text): # TODO
+  if FOXisInList({_configPath},qq,"admin") is true:# 检测指令发送者是否有执行权限
+    if {_silent} is "false":
+      FOX_sendMessage({_group},{_code},"南狐正在重载...")
+        set {buildTimes} to {buildTimes}+1 # 增加版本计次
+        set {lastVersion} to "{@version}"
+        # wait 1 second #避免报错
+        reload skript "KitFox"
+
+function FOX_executeCommand(type: text, code: text, content: text): # TODO
+  
 # -------------------------------------------------------
 on load:
   set {FOX_loading} to true
@@ -188,11 +203,14 @@ on bot receive group message:
   set {_silent} to FOX_getConfigValue("silent-mode")
   if FOX_isInList("plugins/KitFox/config.yml","%{qq-group's id}%","enabled-groups") is true: # 启用群聊
   bot-message's content start with {_prefix}: # 命令前缀
+    set {_argument::*} to bot-message's content split by " " # 指令分割
     if FOX_isInNode({_registeredCommandPath} ,{_argument::2},"registered") is true:
+      load yml {_registeredCommandPath} as {_registeredCommandPath}
       set {_targetFunction} to yml value "registered.%{_argument::2}%.function" from {_registeredCommandPath} 
       set {_messageInfo::type} to "group"
       set {_messageInfo::code} to "%{qq-group's id}%"
       set {_messageInfo::content} to bot-message's content
       FOX_executeMethod("%{_targetFunction}%",{_messageInfo::*})
+      unload yml {_registeredCommandPath}
     else:
       FOX_sendMessage("group","%qq-group's id%","命令不存在！")
