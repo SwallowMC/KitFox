@@ -109,7 +109,7 @@ function FOX_isInNode(path: text ,code: text ,type: text) :: boolean:
   set {_configPath} to {_path}
   load yml {_configPath} as {_configPath}
   loop yaml node keys {_type} from {_configPath}:
-    # message "判断%{_type}%.%{_code}%和%loop-node%" to console
+    message "判断%{_type}%.%{_code}%和%loop-node%" to console
     if "%{_type}%.%{_code}%" is "%loop-node%":
       unload yml {_configPath}
       return true
@@ -129,6 +129,7 @@ function FOX_registerCommand(name: text, function: text, description: text):
     set yaml value "registered.%{_name}%.description" from {_registeredCommandPath} to "%{_description}%"
     save yml {_registeredCommandPath}
     unload yml {_registeredCommandPath}
+    message "已注册命令：%{_name}%(%{_description}%)-%{_function}%" to console
 # 主函数
 function FOX_registerCoreCommand():
   FOX_registerCommand("version","FOX_showVersion","显示南狐版本")
@@ -146,6 +147,7 @@ on load:
     set {lastVersion} to {@version}
     set {buildTimes} to 1
   message "[KitFox] 南狐(版本：{@version}-build%{buildTimes}%)启动中……" to console
+  FOX_registerCoreCommand()
   set {_configPath} to "plugins/KitFox/config.yml"
   set {_registeredCommandPath} to "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml"
   if yml file {_registeredCommandPath} exists: # 检测因为神秘原因没有被正常删除的注册命令文件是否存在
@@ -193,4 +195,4 @@ on bot receive group message:
       set {_messageInfo::content} to bot-message's content
       FOX_executeMethod("%{_targetFunction}%",{_messageInfo::*})
     else:
-      reply "命令不存在！"
+      FOX_sendMessage("group","%qq-group's id%","命令不存在！")
