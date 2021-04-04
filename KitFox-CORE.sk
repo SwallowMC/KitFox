@@ -150,7 +150,7 @@ function FOX_showHelpText(type: text, code: text, content: text):
 
 function FOX_reloadKitFox(type: text, code: objects, content: text): # TODO：加入插件重载
   set {_silent} to getConfigValue("silent-mode")
-  if FOXisInList({_configPath},{_code::people},"admin") is true:# 检测指令发送者是否有执行权限
+  if FOXisInList({_configPath},"%{_code::people}%"","admin") is true:# 检测指令发送者是否有执行权限
     if {_silent} is "false":
       if {_type} is "friend":
         FOX_sendMessage("friend",{_code::people},"南狐正在重载...")
