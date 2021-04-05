@@ -90,7 +90,7 @@ function FOX_sendMessage(type:text ,id: text ,message: text):
   # else:
   #   send {_message} to friend {_id} of {_activeBot} bot
   # 我要杀了这个API开发者
-  # message "/mcqqbot send %{_type}% %{_activeBot}% %{_id}% %{_message}%" to console
+  message "/mcqqbot send %{_type}% %{_activeBot}% %{_id}% %{_message}%" to console
   command "/mcqqbot send %{_type}% %{_activeBot}% %{_id}% %{_message}%" by console
 
 function FOX_isInList(path: text ,code: text ,type: text) :: boolean:
@@ -133,7 +133,10 @@ function FOX_registerCoreCommand():
   FOX_registerCommand("broadcast","FOX_brocastMessage","向服务器发送广播")
 
 function FOX_showVersion(type: text, code: objects, content: text):
-  FOX_sendMessage("group",{_code},"本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
+  if {_type} is "friend":
+    FOX_sendMessage("friend","%{_code::people}%","本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
+  else:
+    FOX_sendMessage("group","%{_code::group}%","本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
 
 function FOX_showHelpText(type: text, code: text, content: text):
   set {_registeredCommandPath} to "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml"
@@ -141,35 +144,35 @@ function FOX_showHelpText(type: text, code: text, content: text):
   set {_template::*} to yml list {_type} from {_registeredCommandPath}
   set {_result} to "以下是可被南狐执行的命令："
   loop {_template::*}:
-  set {_result} to "%nl%%loop-value%"
+    set {_result} to "%nl%%loop-value%"
   if {_type} is "friend":
-    FOX_sendMessage("friend",{_code::people},"南狐正在重载...")
+    FOX_sendMessage("friend","%{_code::people}%",{_result})
   else:
-    FOX_sendMessage("group",{_code::group},"南狐正在重载...")
+    FOX_sendMessage("group","%{_code::group}%",{_result})
     
 
 function FOX_reloadKitFox(type: text, code: objects, content: text): # TODO：加入插件重载
-  set {_silent} to getConfigValue("silent-mode")
-  if FOXisInList({_configPath},"%{_code::people}%"","admin") is true:# 检测指令发送者是否有执行权限
+  set {_silent} to FOX_getConfigValue("silent-mode")
+  if FOX_isInList({_configPath},"%{_code::people}%","admin") is true:# 检测指令发送者是否有执行权限
     if {_silent} is "false":
       if {_type} is "friend":
-        FOX_sendMessage("friend",{_code::people},"南狐正在重载...")
+        FOX_sendMessage("friend","%{_code::people}%","南狐正在重载...")
       else:
-        FOX_sendMessage("group",{_code::group},"南狐正在重载...")
+        FOX_sendMessage("group","%{_code::group}%","南狐正在重载...")
       set {buildTimes} to {buildTimes}+1 # 增加版本计次
       set {lastVersion} to "{@version}"
       # wait 1 second #避免报错
       reload skript "KitFox-CORE"
 
 function FOX_executeCommand(type: text, code: objects, content: text):
-  set {_silent} to getConfigValue("silent-mode")
-  if FOXisInList({_configPath},{_code::people},"admin") is true:# 检测指令发送者是否有执行权限
-  command "/%{_content}%" to console
+  set {_silent} to FOX_getConfigValue("silent-mode")
+  if FOX_isInList({_configPath},"%{_code::people}%","admin") is true:# 检测指令发送者是否有执行权限
+    command "/%{_content}%" by console
     if {_silent} is "false":
       if {_type} is "friend":
-        FOX_sendMessage("friend",{_code::people},"指令已发送至控制台！")
+        FOX_sendMessage("friend","%{_code::people}%","指令已发送至控制台！")
       else:
-        FOX_sendMessage("group",{_code::group},"指令已发送至控制台！")
+        FOX_sendMessage("group","%{_code::group}%","指令已发送至控制台！")
   
 # -------------------------------------------------------
 on load:
@@ -224,8 +227,8 @@ on bot receive group message:
       load yml {_registeredCommandPath} as {_registeredCommandPath}
       set {_targetFunction} to yml value "registered.%{_argument::2}%.function" from {_registeredCommandPath} 
       set {_messageInfo::type} to "group"
-      set {_messageInfo::code::group} to "%qq-group's id%"
-      set {_messageInfo::code::people} to "%group-member's id%"
+      set {_messageInfo::code::group} to qq-group's id
+      set {_messageInfo::code::people} to group-member's id
       set {_messageInfo::content} to bot-message's content
       FOX_executeMethod("%{_targetFunction}%",{_messageInfo::*})
       unload yml {_registeredCommandPath}
