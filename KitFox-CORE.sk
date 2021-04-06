@@ -1,4 +1,4 @@
-# KitFox-CORE.sk
+﻿# KitFox-CORE.sk
 # 依赖:
 # Skript 2.4.0 
 # McQQbot 2.0 
@@ -152,6 +152,7 @@ function FOX_showHelpText(type: text, code: text, content: text):
     
 
 function FOX_reloadKitFox(type: text, code: objects, content: text): # TODO：加入插件重载
+  set {_configPath} to "plugins/KitFox/config.yml"
   set {_silent} to FOX_getConfigValue("silent-mode")
   if FOX_isInList({_configPath},"%{_code::people}%","admin") is true:# 检测指令发送者是否有执行权限
     if {_silent} is "false":
@@ -165,6 +166,7 @@ function FOX_reloadKitFox(type: text, code: objects, content: text): # TODO：�
       reload skript "KitFox-CORE"
 
 function FOX_executeCommand(type: text, code: objects, content: text):
+  set {_configPath} to "plugins/KitFox/config.yml"
   set {_silent} to FOX_getConfigValue("silent-mode")
   if FOX_isInList({_configPath},"%{_code::people}%","admin") is true:# 检测指令发送者是否有执行权限
     command "/%{_content}%" by console
@@ -220,7 +222,8 @@ on bot receive group message:
   set {_groupid} to FOX_getConfigValue("main-group")
   set {_prefix} to FOX_getConfigValue("command-prefix")
   set {_silent} to FOX_getConfigValue("silent-mode")
-  if FOX_isInList("plugins/KitFox/config.yml","%{qq-group's id}%","enabled-groups") is true: # 启用群聊
+  message "qq-group's id:%{qq-group's id}%,group-member's id:%{group-member's id}%" to console
+  if FOX_isInList({_configPath},"%{qq-group's id}%","enabled-groups") is true: # 启用群聊
   bot-message's content start with {_prefix}: # 命令前缀
     set {_argument::*} to bot-message's content split by " " # 指令分割
     if FOX_isInNode({_registeredCommandPath} ,{_argument::2},"registered") is true:
