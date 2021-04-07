@@ -1,1 +1,5 @@
+#Floodgate-Skript
+#KitFox-Core
+
 on skript start:
+    FOX_registerCommand("checkBE","FOX_AUTHME_REG","检测是否是BE玩家(在线)")
