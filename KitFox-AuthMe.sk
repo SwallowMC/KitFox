@@ -14,7 +14,7 @@ on server start:
   FOX_registerCommand("cp","FOX_AUTHME_CP","更改密码")
   FOX_registerCommand("lm","FOX_AUTHME_LOGINMODE","更改登录方式（需要FastLogin）")
 
-function FOX_AUTHME_REG(type: text, code: objects, content: text):
+function FOX_AUTHME_REG(type: text, groupcode: text, peoplecode: text, content: text):
   set {_silent} to FOX_getConfigValue("silent-mode")
   set {_argument::*} to {_content} split by " " # 指令分割
   if FOX_isInList({_configPath},"%{_code::people}%","helper") is true:# 检测指令发送者是否有执行权限
@@ -25,7 +25,7 @@ function FOX_AUTHME_REG(type: text, code: objects, content: text):
       else:
         FOX_sendMessage("group","%{_code::group}%","注册指令已发送至控制台！")
 
-function FOX_AUTHME_UNREG(type: text, code: objects, content: text):
+function FOX_AUTHME_UNREG(type: text, groupcode: text, peoplecode: text, content: text):
   set {_silent} to FOX_getConfigValue("silent-mode")
   set {_argument::*} to {_content} split by " " # 指令分割
   if FOX_isInList({_configPath},"%{_code::people}%","helper") is true:# 检测指令发送者是否有执行权限
@@ -36,7 +36,7 @@ function FOX_AUTHME_UNREG(type: text, code: objects, content: text):
       else:
         FOX_sendMessage("group","%{_code::group}%","注销指令已发送至控制台！")
 
-function FOX_AUTHME_CP(type: text, code: objects, content: text):
+function FOX_AUTHME_CP(type: text, groupcode: text, peoplecode: text, content: text):
   set {_silent} to FOX_getConfigValue("silent-mode")
   set {_argument::*} to {_content} split by " " # 指令分割
   if FOX_isInList({_configPath},"%{_code::people}%","helper") is true:# 检测指令发送者是否有执行权限
@@ -54,7 +54,7 @@ function FOX_AUTHME_CP(type: text, code: objects, content: text):
         FOX_sendMessage("group","%{_code::group}%","抱歉，您并没有权限！")
 
 
-function FOX_AUTHME_LOGINMODE(type: text, code: objects, content: text):
+function FOX_AUTHME_LOGINMODE(type: text, groupcode: text, peoplecode: text, content: text):
   set {_silent} to FOX_getConfigValue("silent-mode")
   set {_argument::*} to {_content} split by " " # 指令分割
   if FOX_isInList({_configPath},"%{_code::people}%","helper") is true:# 检测指令发送者是否有执行权限

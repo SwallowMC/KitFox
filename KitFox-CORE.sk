@@ -24,7 +24,7 @@ import:
 function FOX_executeMethod(functionName: text, info: objects):
   set {_functions::run} to function reference {_functionName} called with argument  {_info::*}
   set {_proxy} to new proxy instance of Runnable using {_functions::*}
-  {_proxy}.run()
+  Bukkit.getScheduler().runTask(Skript.getInstance(), {_proxy})
   
 function FOX_createConfig():
   set {_configPath} to "plugins/KitFox/config.yml" # 配置路径
@@ -90,7 +90,7 @@ function FOX_sendMessage(type:text ,id: text ,message: text):
   # else:
   #   send {_message} to friend {_id} of {_activeBot} bot
   # 我要杀了这个API开发者
-  message "/mcqqbot send %{_type}% %{_activeBot}% %{_id}% %{_message}%" to console
+  message "/mcqqbot send %{_type}% %{_activeBot}% %{_id}% %{_message}%" to console # DEBUG
   command "/mcqqbot send %{_type}% %{_activeBot}% %{_id}% %{_message}%" by console
 
 function FOX_isInList(path: text ,code: text ,type: text) :: boolean:
@@ -132,13 +132,14 @@ function FOX_registerCoreCommand():
   FOX_registerCommand("run","FOX_executeCommand","向服务器控制台发送指令")
   FOX_registerCommand("broadcast","FOX_brocastMessage","向服务器发送广播")
 
-function FOX_showVersion(type: text, code: objects, content: text):
+function FOX_showVersion(type: text, groupcode: text, peoplecode: text, content: text):
   if {_type} is "friend":
     FOX_sendMessage("friend","%{_code::people}%","本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
   else:
     FOX_sendMessage("group","%{_code::group}%","本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
 
-function FOX_showHelpText(type: text, code: text, content: text):
+function FOX_showHelpText(type: text, groupcode: text, peoplecode: text, content: text):
+  message "type:%{_type}% code:%{_code::*}% content:%{_content}%" to console
   set {_registeredCommandPath} to "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml"
   load yml {_registeredCommandPath} as {_registeredCommandPath}
   set {_template::*} to yml list {_type} from {_registeredCommandPath}
@@ -151,7 +152,7 @@ function FOX_showHelpText(type: text, code: text, content: text):
     FOX_sendMessage("group","%{_code::group}%",{_result})
     
 
-function FOX_reloadKitFox(type: text, code: objects, content: text): # TODO：加入插件重载
+function FOX_reloadKitFox(type: text, groupcode: text, peoplecode: text, content: text): # TODO：加入插件重载
   set {_configPath} to "plugins/KitFox/config.yml"
   set {_silent} to FOX_getConfigValue("silent-mode")
   if FOX_isInList({_configPath},"%{_code::people}%","admin") is true:# 检测指令发送者是否有执行权限
@@ -165,7 +166,7 @@ function FOX_reloadKitFox(type: text, code: objects, content: text): # TODO：�
       # wait 1 second #避免报错
       reload skript "KitFox-CORE"
 
-function FOX_executeCommand(type: text, code: objects, content: text):
+function FOX_executeCommand(type: text, groupcode: text, peoplecode: text, content: text):
   set {_configPath} to "plugins/KitFox/config.yml"
   set {_silent} to FOX_getConfigValue("silent-mode")
   if FOX_isInList({_configPath},"%{_code::people}%","admin") is true:# 检测指令发送者是否有执行权限
@@ -222,7 +223,7 @@ on bot receive group message:
   set {_groupid} to FOX_getConfigValue("main-group")
   set {_prefix} to FOX_getConfigValue("command-prefix")
   set {_silent} to FOX_getConfigValue("silent-mode")
-  message "qq-group's id:%{qq-group's id}%,group-member's id:%{group-member's id}%" to console
+  message "qq-group's id:%qq-group's id%,group-member's id:%group-member's id%" to console # DEBUG
   if FOX_isInList({_configPath},"%{qq-group's id}%","enabled-groups") is true: # 启用群聊
   bot-message's content start with {_prefix}: # 命令前缀
     set {_argument::*} to bot-message's content split by " " # 指令分割
@@ -230,10 +231,12 @@ on bot receive group message:
       load yml {_registeredCommandPath} as {_registeredCommandPath}
       set {_targetFunction} to yml value "registered.%{_argument::2}%.function" from {_registeredCommandPath} 
       set {_messageInfo::type} to "group"
-      set {_messageInfo::code::group} to qq-group's id
-      set {_messageInfo::code::people} to group-member's id
-      set {_messageInfo::content} to bot-message's content
+      set {_messageInfo::groupcode} to "%qq-group's id%"
+      set {_messageInfo::peoplecode} to "%group-member's id%"
+      set {_messageInfo::content} to "%bot-message's content%"
+      # message "messageInfo:%{_messageInfo::*}% messageInfo::code:%{_messageInfo::code::*}%" to console# DEBUG
       FOX_executeMethod("%{_targetFunction}%",{_messageInfo::*})
       unload yml {_registeredCommandPath}
     else:
-      FOX_sendMessage("group","%qq-group's id%","命令不存在！")
+      FOX_sendMessage("group","%qq-group's id%","命令不存在!")
+      
