@@ -139,17 +139,17 @@ function FOX_showVersion(type: text, groupcode: text, peoplecode: text, content:
     FOX_sendMessage("group","%{_code::group}%","本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
 
 function FOX_showHelpText(type: text, groupcode: text, peoplecode: text, content: text):
-  message "type:%{_type}% code:%{_code::*}% content:%{_content}%" to console
+  # message "type:%{_type}% code:%{_code::*}% content:%{_content}%" to console
   set {_registeredCommandPath} to "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml"
   load yml {_registeredCommandPath} as {_registeredCommandPath}
-  set {_template::*} to yml list {_type} from {_registeredCommandPath}
   set {_result} to "以下是可被南狐执行的命令："
-  loop {_template::*}:
-    set {_result} to "%nl%%loop-value%"
+  loop yaml node keys "registered" from {_registeredCommandPath}:
+    set {_description} to yml value "registered.%loop-value%.description" from  {_registeredCommandPath}
+    set {_result} to "%{_result}%%nl%%loop-value% - %{_description}%"
   if {_type} is "friend":
-    FOX_sendMessage("friend","%{_code::people}%",{_result})
+    FOX_sendMessage("friend","%{_peoplecode}%",{_result})
   else:
-    FOX_sendMessage("group","%{_code::group}%",{_result})
+    FOX_sendMessage("group","%{_groupcode}%",{_result})
     
 
 function FOX_reloadKitFox(type: text, groupcode: text, peoplecode: text, content: text): # TODO：加入插件重载
