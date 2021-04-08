@@ -12,7 +12,7 @@
 # --------------------------------------------
 
 options:
-  version: 2.0
+  version: 2.0-β1
   config-version: 4
   
 import:
@@ -89,7 +89,6 @@ function FOX_sendMessage(type:text ,id: text ,message: text):
   #   send {_message} to group {_id} of {_activeBot} bot
   # else:
   #   send {_message} to friend {_id} of {_activeBot} bot
-  # 我要杀了这个API开发者
   message "/mcqqbot send %{_type}% %{_activeBot}% %{_id}% %{_message}%" to console # DEBUG
   command "/mcqqbot send %{_type}% %{_activeBot}% %{_id}% %{_message}%" by console
 
@@ -134,12 +133,12 @@ function FOX_registerCoreCommand():
 
 function FOX_showVersion(type: text, groupcode: text, peoplecode: text, content: text):
   if {_type} is "friend":
-    FOX_sendMessage("friend","%{_code::people}%","本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
+    FOX_sendMessage("friend","%{_peoplecode}%","本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
   else:
-    FOX_sendMessage("group","%{_code::group}%","本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
+    FOX_sendMessage("group","%{_groupcode}%","本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
 
 function FOX_showHelpText(type: text, groupcode: text, peoplecode: text, content: text):
-  # message "type:%{_type}% code:%{_code::*}% content:%{_content}%" to console
+  message "type:%{_type}% groupcode:%{_groupcode}% peoplecode:%{_peoplecode}% content:%{_content}%" to console
   set {_registeredCommandPath} to "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml"
   load yml {_registeredCommandPath} as {_registeredCommandPath}
   set {_result} to "以下是可被南狐执行的命令："
@@ -155,12 +154,12 @@ function FOX_showHelpText(type: text, groupcode: text, peoplecode: text, content
 function FOX_reloadKitFox(type: text, groupcode: text, peoplecode: text, content: text): # TODO：加入插件重载
   set {_configPath} to "plugins/KitFox/config.yml"
   set {_silent} to FOX_getConfigValue("silent-mode")
-  if FOX_isInList({_configPath},"%{_code::people}%","admin") is true:# 检测指令发送者是否有执行权限
+  if FOX_isInList({_configPath},"%{_peoplecode}%","admin") is true:# 检测指令发送者是否有执行权限
     if {_silent} is "false":
       if {_type} is "friend":
-        FOX_sendMessage("friend","%{_code::people}%","南狐正在重载...")
+        FOX_sendMessage("friend","%{_peoplecode}%","南狐正在重载...")
       else:
-        FOX_sendMessage("group","%{_code::group}%","南狐正在重载...")
+        FOX_sendMessage("group","%{_groupcode}%","南狐正在重载...")
       set {buildTimes} to {buildTimes}+1 # 增加版本计次
       set {lastVersion} to "{@version}"
       # wait 1 second #避免报错
@@ -169,19 +168,20 @@ function FOX_reloadKitFox(type: text, groupcode: text, peoplecode: text, content
 function FOX_executeCommand(type: text, groupcode: text, peoplecode: text, content: text):
   set {_configPath} to "plugins/KitFox/config.yml"
   set {_silent} to FOX_getConfigValue("silent-mode")
-  if FOX_isInList({_configPath},"%{_code::people}%","admin") is true:# 检测指令发送者是否有执行权限
-    command "/%{_content}%" by console
+  if FOX_isInList({_configPath},"%{_peoplecode}%","admin") is true:# 检测指令发送者是否有执行权限
+    set {_argument::*} to {_content} split by " " # 指令分割
+    command "/%{_argument::3}%" by console
     if {_silent} is "false":
       if {_type} is "friend":
-        FOX_sendMessage("friend","%{_code::people}%","指令已发送至控制台！")
+        FOX_sendMessage("friend","%{_peoplecode}%","指令已发送至控制台！")
       else:
-        FOX_sendMessage("group","%{_code::group}%","指令已发送至控制台！")
+        FOX_sendMessage("group","%{_groupcode}%","指令已发送至控制台！")
   
 # -------------------------------------------------------
 on load:
   set {FOX_loading} to true
   if "{@version}" is not "%{lastVersion}%":
-    set {lastVersion} to {@version}
+    set {lastVersion} to "{@version}"
     set {buildTimes} to 1
   message "[KitFox] 南狐(版本：{@version}-build%{buildTimes}%)启动中……" to console      
   FOX_registerCoreCommand()
@@ -216,7 +216,7 @@ on server stop:
   set {_groupid} to FOX_getConfigValue("main-group")
   FOX_sendMessage("group",{_groupid},"服务器已关闭！")
   
-# 当机器人收到群聊时(命令执行部分)
+# 当机器人收到群聊消息时(命令执行部分)
 on bot receive group message:
   set {_configPath} to "plugins/KitFox/config.yml"
   set {_registeredCommandPath} to "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml"
@@ -224,19 +224,41 @@ on bot receive group message:
   set {_prefix} to FOX_getConfigValue("command-prefix")
   set {_silent} to FOX_getConfigValue("silent-mode")
   message "qq-group's id:%qq-group's id%,group-member's id:%group-member's id%" to console # DEBUG
-  if FOX_isInList({_configPath},"%{qq-group's id}%","enabled-groups") is true: # 启用群聊
+  if FOX_isInList({_configPath},"%qq-group's id%","enabled-groups") is true: # 启用群聊
+    bot-message's content start with {_prefix}: # 命令前缀
+      set {_argument::*} to bot-message's content split by " " # 指令分割
+      if FOX_isInNode({_registeredCommandPath} ,{_argument::2},"registered") is true:
+        load yml {_registeredCommandPath} as {_registeredCommandPath}
+        set {_targetFunction} to yml value "registered.%{_argument::2}%.function" from {_registeredCommandPath} 
+        set {_messageInfo::type} to "group"
+        set {_messageInfo::groupcode} to "%qq-group's id%"
+        set {_messageInfo::peoplecode} to "%group-member's id%"
+        set {_messageInfo::content} to "%bot-message's content%"
+        # message "messageInfo:%{_messageInfo::*}% messageInfo::code:%{_messageInfo::code::*}%" to console# DEBUG
+        FOX_executeMethod("%{_targetFunction}%",{_messageInfo::*})
+        unload yml {_registeredCommandPath}
+      else:
+        FOX_sendMessage("group","%qq-group's id%","命令不存在!")
+      
+# 当机器人收到私聊消息时(命令执行部分)
+on bot receive friend message:
+  set {_configPath} to "plugins/KitFox/config.yml"
+  set {_registeredCommandPath} to "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml"
+  set {_groupid} to FOX_getConfigValue("main-group")
+  set {_prefix} to FOX_getConfigValue("command-prefix")
+  set {_silent} to FOX_getConfigValue("silent-mode")
+  message "qq-friend's id:%qq-friend's id%" to console # DEBUG
   bot-message's content start with {_prefix}: # 命令前缀
     set {_argument::*} to bot-message's content split by " " # 指令分割
     if FOX_isInNode({_registeredCommandPath} ,{_argument::2},"registered") is true:
       load yml {_registeredCommandPath} as {_registeredCommandPath}
       set {_targetFunction} to yml value "registered.%{_argument::2}%.function" from {_registeredCommandPath} 
-      set {_messageInfo::type} to "group"
-      set {_messageInfo::groupcode} to "%qq-group's id%"
-      set {_messageInfo::peoplecode} to "%group-member's id%"
-      set {_messageInfo::content} to "%bot-message's content%"
-      # message "messageInfo:%{_messageInfo::*}% messageInfo::code:%{_messageInfo::code::*}%" to console# DEBUG
+      set {_messageInfo::1} to "friend"
+      set {_messageInfo::2} to "<none>"
+      set {_messageInfo::3} to "%qq-friend's id%"
+      set {_messageInfo::4} to "%bot-message's content%"
+      # message "messageInfo:%{_messageInfo::*}%" to console# DEBUG
       FOX_executeMethod("%{_targetFunction}%",{_messageInfo::*})
       unload yml {_registeredCommandPath}
     else:
-      FOX_sendMessage("group","%qq-group's id%","命令不存在!")
-      
+      FOX_sendMessage("group","%qq-friend's id%","命令不存在!")      
