@@ -1,0 +1,113 @@
+# KitFox-ChatForwardExtra.sk
+# 依赖:
+# KitFox-CORE.sk
+# skript-placeholders 1.5 
+# AdvancementTranslate 1.1 （可从SwallowMC仓库下载）
+#
+# 本skript由SwallowMC团队编写并由SinanGentoo主要维护；
+# 如果你在使用本脚本时遇到了问题，请联系我们或者在我们的Github
+# 仓库里发issue或pr！
+# --------------------------------------------
+import: # 需要引用的java类
+  org.bukkit.Raid
+  org.bukkit.Location
+  org.bukkit.entity.Player
+  org.bukkit.advancement.Advancement
+  org.bukkit.event.world.WorldEvent
+  org.bukkit.event.player.PlayerAdvancementDoneEvent
+  org.bukkit.event.raid.RaidEvent
+  org.bukkit.event.raid.RaidTriggerEvent as raid
+  org.bukkit.event.raid.RaidFinishEvent as victory
+  
+# 当玩家完成某个成就时
+# Todo：换用yaml进行成就翻译
+on PlayerAdvancementDoneEvent:
+  set {_groupid} to FOX_getConfigValue("main-group")
+  set {_cf} to FOX_getConfigValue("chat-forward")
+  set {_advancement} to event.getAdvancement().getKey().toString()
+  set {_player} to event.getPlayer().getName()
+  if {_cf} is "true":
+    {_advancement} contain "recipes/":
+      stop
+    else:
+      set {_advancementStr} to placeholder "AdvancementTranslate_%{_advancement}%"
+      FOX_sendMessage("group","%{_groupid}%","玩家%{_player}%获得了成就 [%{_advancementStr}%]")
+
+      
+# 死亡转发
+on death of player:
+  set {_groupid} to FOX_getConfigValue("main-group")
+  set {_cf} to FOX_getConfigValue("chat-forward")
+  if {_cf} is "true": # 聊天转发是否开启
+    if "%event-damagecause%" is "unknown":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 不明不白的死了")
+    else if "%event-damagecause%" is "drowning":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 溺死了")  
+    else if "%event-damagecause%" is "contact":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 被刺死了")
+    else if "%event-damagecause%" is "thorns":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 被炸死了")  
+    else if "%event-damagecause%" is "wither":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 凋零了")
+    else if "%event-damagecause%" is "projectile":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 被射死了")
+    else if "%event-damagecause%" is "void":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 掉出了世界")
+    else if "%event-damagecause%" is "fall":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 摔死了")
+    else if "%event-damagecause%" is "burning":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 被烧死了")
+    else if "%event-damagecause%" is "lightning":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 被劈死了")
+    else if "%event-damagecause%" is "fire":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 被烧死了")
+    else if "%event-damagecause%" is "sweep attack":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 被杀死了")
+    else if "%event-damagecause%" is "potion":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 被药水杀死了")
+    else if "%event-damagecause%" is "entity explosion":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 爆炸了")
+    else if "%event-damagecause%" is "attack":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 被杀死了")
+    else if "%event-damagecause%" is "lava":
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 尝试在岩浆里游泳")
+    else:
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 因为 %event-damagecause% 惨叫一声醒在了自己的床上") 
+     
+# 劫掠转发（开始）
+on raid:
+  set {_groupid} to FOX_getConfigValue("main-group")
+  set {_cf} to FOX_getConfigValue("chat-forward")
+  if {_cf} is "true": # 聊天转发是否开启
+    set {_raidlevel} to event.getRaid().getBadOmenLevel()
+    set {_posx} to event.getRaid().getLocation().getBlockX()
+    set {_posy} to event.getRaid().getLocation().getBlockY()
+    set {_posz} to event.getRaid().getLocation().getBlockZ()
+    set {_raidText::0} to "主世界正在发生一起劫掠事件！%nl%"
+    set {_raidText::1} to "劫掠级别：%{_raidlevel}%%nl%"
+    set {_raidText::2} to "劫掠地点：（x：%{_posx}% y：%{_posy}% z：%{_posz}%）%nl%"
+    # set {_raidText::3} to "本台记者南狐将持续为您扌"
+    
+    set {_result} to linkText({_raidText::*})
+    FOX_sendMessage("group","%{_groupid}%","%{_result}%")
+
+# 劫掠转发（结束）    
+on victory:
+  set {_groupid} to FOX_getConfigValue("main-group")
+  set {_cf} to FOX_getConfigValue("chat-forward")
+  if {_cf} is "true": # 聊天转发是否开启
+    set {_ticks} to event.getRaid().getActiveTicks()
+    set {_posx} to event.getRaid().getLocation().getBlockX()
+    set {_posy} to event.getRaid().getLocation().getBlockY()
+    set {_posz} to event.getRaid().getLocation().getBlockZ()
+    set {_level} to event.getRaid().getBadOmenLevel()
+    set {_status} to event.getRaid().getStatus()
+    set {_group_count} to event.getRaid().getTotalGroups()
+
+    set {_Text::0} to "一场%{_level}%级的袭击刚刚结束！%nl%"
+    set {_Text::1} to "经过了%{_ticks}%刻的斗争，这次袭击的结果是：%{_status}%！%nl%"
+    set {_Text::2} to "刚才有%{_group_count}%波掠夺者，"
+    # set {_Text::3} to "感谢您持续关注本台记者洞庭狐的报道!"
+
+    set {_result} to linkText({_Text::*})
+    FOX_sendMessage("group","%{_groupid}%","%{_result}%")      
