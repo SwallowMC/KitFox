@@ -1,6 +1,6 @@
 #依赖:
 #Floodgate
-#Floodgate-Skript
+#Floodgate-Skript(1.0或者2.0)
 #KitFox-Core
 
 on skript start:
