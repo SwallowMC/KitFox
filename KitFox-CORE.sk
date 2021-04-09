@@ -272,7 +272,7 @@ on bot receive group message:
     stop
   if "%qq-group's id%" is "%{_groupid}%":
     if {_cf} is "true":
-      broadcast "[群聊]<%group-member's nick%> %bot-message's content%"
+      broadcast "[群聊]<%group-member's namecard%> %bot-message's content%"
       
 # 当服务器内玩家发消息时
 on chat:
