@@ -129,7 +129,7 @@ function FOX_registerCoreCommand():
   FOX_registerCommand("help","FOX_showHelpText","显示所有南狐可执行的命令")
   # FOX_registerCommand("reload","FOX_reloadKitFox","重载南狐")
   FOX_registerCommand("run","FOX_executeCommand","向服务器控制台发送指令")
-  FOX_registerCommand("broadcast","FOX_brocastMessage","向服务器发送广播")
+  # FOX_registerCommand("broadcast","FOX_brocastMessage","向服务器发送广播")
 
 function FOX_showVersion(type: text, groupcode: text, peoplecode: text, content: text):
   if {_type} is "friend":
