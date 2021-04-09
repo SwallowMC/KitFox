@@ -1,0 +1,24 @@
+#依赖:
+#Floodgate
+#Floodgate-Skript
+#KitFox-Core
+
+on skript start:
+    FOX_registerCommand("checkBE","FLOODGATE_GET_BE_PLAYER","检测是否是BE玩家(在线)")
+    
+function FLOODGATE_GET_BE_PLAYER(type: text, groupcode: text, peoplecode: text, content: text):
+    set {_silent} to FOX_getConfigValue("silent-mode")
+    if FOX_isInList({_configPath},"%{_code::people}%","helper") is true:
+        set {_bp} to {_content} parsed as player# 解析本文为玩家
+        if {_bp} is online:
+            if {_bp} is from floodgate:
+                set {_rm} to "玩家 %{_bp}% 是基岩玩家"
+            else:
+                set {_rm} to "玩家 %{_bp}% 不是基岩玩家"
+        else:
+            set {_rm} to "玩家 %{_bp}% 不在线"
+        if {_silent} is "false":
+            if {_type} is "friend":
+                FOX_sendMessage("friend","%{_code::people}%",{_rm})
+            else:
+                FOX_sendMessage("group","%{_code::group}%",{_rm})
