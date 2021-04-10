@@ -1,0 +1,20 @@
+# KitFox-Maintenance.sk
+# 依赖:
+# KitFox-CORE.sk
+# Maintenance等维护插件
+# AdvancedBan
+# 
+# 本skript由SwallowMC团队编写并由SinanGentoo主要维护；
+# 如果你在使用本脚本时遇到了问题，请联系我们或者在我们的Github
+# 仓库里发issue或pr！
+# --------------------------------------------
+on server start:
+  FOX_registerCommand("tempban","FOX_MAINTENANCE_TEMPBAN","暂时性封禁一个玩家")
+  FOX_registerCommand("ban","FOX_MAINTENANCE_BAN","永久封禁一个玩家")
+  FOX_registerCommand("kick","FOX_MAINTENANCE_KICK","踢出一个玩家")
+  FOX_registerCommand("warn","FOX_AUTHME_WARN","警告某个玩家")
+  FOX_registerCommand("maintenance","FOX_MAINTENANCE","开关维护模式")
+  FOX_registerCommand("opdo","FOX_MAINTENANCE_OPDO","让某个玩家以op的身份执行一条指令")
+  FOX_registerCommand("broadcast","FOX_MAINTENANCE_BROADCAST","向服务器发送一条广播")
+  FOX_registerCommand("stop","FOX_AUTHME_STOP","关闭服务器")
+  FOX_registerCommand("restart","FOX_AUTHME_RESTART","重启服务器（需要服务端支持）")

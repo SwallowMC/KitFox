@@ -7,6 +7,12 @@
 # 如果你在使用本脚本时遇到了问题，请联系我们或者在我们的Github
 # 仓库里发issue或pr！
 # --------------------------------------------
+function FOX_SI_linkText(textCollection: objects) :: text:
+  set {_result} to ""
+  loop {_textCollection::*}:
+    set {_result} to "%{_result}%%loop-value%"
+  return "%{_result}%"
+  
 on server start:
   FOX_registerCommand("info","FOX_SERVERINFO","获取服务器状态")
   
@@ -16,5 +22,5 @@ function FOX_SERVERINFO(type: text, groupcode: text, peoplecode: text, content: 
   set {_infotext::2} to "服务器人数：%placeholder ""server_online""%/%placeholder ""server_max_players""%%nl%"
   set {_infotext::3} to "服务器已用内存：%placeholder ""server_ram_used""%M%nl%"
   set {_infotext::4} to "服务器TPS：%tps%"  
-  set {_result} to FOX_linkText({_infotext::*})
+  set {_result} to FOX_SI_linkText({_infotext::*})
   FOX_sendMessage("group","%{_groupcode}%","%{_result}%")
