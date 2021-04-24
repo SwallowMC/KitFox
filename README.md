@@ -1,3 +1,4 @@
+# 项目正在为最新版的McQQBot进行重写工作，如需测试请切换分支至DEV/2.0!
 # KitFox
 一个基于McQQBot与Skript的Minecraft-QQ机器人。
 ![吉祥物](https://i.loli.net/2021/04/10/qHizhuI1SVZrPT5.jpg)
