@@ -1,0 +1,307 @@
+﻿# KitFox-CORE.sk
+# 依赖:
+# Skript 2.4.0 
+# McQQbot 2.0 
+# skript-yaml 1.3.2
+# skript-reflect 2.1.0 *
+#
+# 本skript由SwallowMC团队编写并由SinanGentoo主要维护；
+# 如果你在使用本脚本时遇到了问题，请联系我们或者在我们的Github
+# 仓库里发issue或pr！
+# PS：如需该脚本支持更多功能，欢迎在我们的官方仓库里下载！
+# --------------------------------------------
+
+options:
+  version: 2.0-β1
+  config-version: 4
+  
+import:
+  org.bukkit.Bukkit
+  ch.njol.skript.Skript
+  java.lang.Runnable
+
+# 核心函数
+function FOX_executeMethod(functionName: text, info: objects):
+  set {_functions::run} to function reference {_functionName} called with argument  {_info::*}
+  set {_proxy} to new proxy instance of Runnable using {_functions::*}
+  Bukkit.getScheduler().runTask(Skript.getInstance(), {_proxy})
+  
+function FOX_createConfig():
+  set {_configPath} to "plugins/KitFox/config.yml" # 配置路径
+  set {_example::Example} to 114514
+  set {_example::anotherExample} to 1919810
+  load yml {_configPath} as {_configPath}
+  
+  set yml value "config-version" from {_configPath} to {@config-version}
+  set the comments of yaml node "config-version" from {_configPath} to "请不要修改！"
+  set yml value "main-group" from {_configPath} to 12306
+  set the comments of yaml node "main-group" from {_configPath} to "机器人的主要工作群聊（群聊转发，广播等）"
+  set yml value "active-account" from {_configPath} to "Main"
+  set the comments of yaml node "active-account" from {_configPath} to "机器人使用的账号名字，参照MCQQBot的config内容"
+  set yml value "command-prefix" from {_configPath} to "!fox"
+  set the comments of yaml node "command-prefix" from {_configPath} to "机器人命令前缀（不可有空格）"
+  set yml value "remote-secret" from {_configPath} to "!fox"
+  set yml value "chat-forward" from {_configPath} to true
+  set the comments of yaml node "chat-forward" from {_configPath} to "选择是否要开启聊天转发"
+  set yml value "op-vanish" from {_configPath} to true
+  set the comments of yaml node "op-vanish" from {_configPath} to "是否不提示管理员在线" and "使用此项时请确保聊天转发已经开启！" 
+  set yml value "silent-mode" from {_configPath} to false
+  set the comments of yaml node "remote-secret" from {_configPath} to "用于远程控制服务器，需要MCSM面板的支持"
+  set yml list "enabled-groups" from {_configPath} to {_example::*}
+  set the comments of yaml node "enabled-groups" from {_configPath} to "哪些群可以执行机器人命令"
+  set yml list "admin" from {_configPath} to {_example::*}
+  set the comments of yaml node "admin" from {_configPath} to "哪些QQ用户能执行管理员命令"
+  set yml list "helper" from {_configPath} to {_example::*}
+  set the comments of yaml node "helper" from {_configPath} to "哪些QQ用户能执行协助者命令"
+  
+  save yml {_configPath}
+  unload yml {_configPath}
+  
+function FOX_getConfigValue(name: text) :: text:
+  set {_configPath} to "plugins/KitFox/config.yml"
+  if yml file {_configPath} exists:
+    load yml {_configPath} as {_configPath}
+    set {_result} to yml value {_name} from {_configPath}
+    unload yml {_configPath}
+    return "%{_result}%"
+  else:
+    message "[KitFox] 没有找到配置文件呢…不过南狐会帮你创建一个哒！" to console
+    FOX_createConfig()
+    return "null"
+
+function FOX_getConfigList(name: text) :: objects:
+  set {_configPath} to "plugins/KitFox/config.yml"
+  if yml file {_configPath} exists:
+    load yml {_configPath} as {_configPath}
+    set {_result::*} to yml list {_name} from {_configPath}
+    unload yml {_configPath}
+    return {_result::*}
+  else:
+    message "[KitFox] 没有找到配置文件呢…不过南狐会帮你创建一个哒！" to console
+    FOX_createConfig()
+    set {_result::1} to "null"
+    return {_result::*}
+
+function FOX_sendMessage(type:text ,id: text ,message: text):
+  # set {_id} to {_id} parsed as long
+  set {_activeBot} to FOX_getConfigValue("active-account")
+  # if type is "group":
+  #   send {_message} to group {_id} of {_activeBot} bot
+  # else:
+  #   send {_message} to friend {_id} of {_activeBot} bot
+  message "/mcqqbot send %{_type}% %{_activeBot}% %{_id}% %{_message}%" to console # DEBUG
+  command "/mcqqbot send %{_type}% %{_activeBot}% %{_id}% %{_message}%" by console
+
+function FOX_isInList(path: text ,code: text ,type: text) :: boolean:
+  set {_configPath} to {_path}
+  load yml {_configPath} as {_configPath}
+  set {_template::*} to yml list {_type} from {_configPath}
+  loop {_template::*}:
+    # message "%loop-value%" to console
+    if {_code} is "%loop-value%":
+      unload yml {_configPath}
+      return true
+  unload yml {_configPath}
+  return false
+  
+function FOX_isInNode(path: text ,code: text ,type: text) :: boolean:
+  set {_configPath} to {_path}
+  load yml {_configPath} as {_configPath}
+  loop yaml node keys {_type} from {_configPath}:
+    message "判断%{_type}%.%{_code}%和%loop-node%" to console
+    if "%{_type}%.%{_code}%" is "%loop-node%":
+      unload yml {_configPath}
+      return true
+  unload yml {_configPath}
+  return false
+  
+function FOX_registerCommand(name: text, function: text, description: text):
+    set {_registeredCommandPath} to "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml"
+    load yml {_registeredCommandPath} as {_registeredCommandPath}
+    set yaml value "registered.%{_name}%.function" from {_registeredCommandPath} to "%{_function}%"
+    set yaml value "registered.%{_name}%.description" from {_registeredCommandPath} to "%{_description}%"
+    save yml {_registeredCommandPath}
+    unload yml {_registeredCommandPath}
+    message "已注册命令：%{_name}%(%{_description}%)-%{_function}%" to console
+# 主函数
+function FOX_registerCoreCommand():
+  FOX_registerCommand("version","FOX_showVersion","显示南狐版本")
+  FOX_registerCommand("help","FOX_showHelpText","显示所有南狐可执行的命令")
+  # FOX_registerCommand("reload","FOX_reloadKitFox","重载南狐")
+  FOX_registerCommand("run","FOX_executeCommand","向服务器控制台发送指令")
+  # FOX_registerCommand("broadcast","FOX_brocastMessage","向服务器发送广播")
+
+function FOX_showVersion(type: text, groupcode: text, peoplecode: text, content: text):
+  if {_type} is "friend":
+    FOX_sendMessage("friend","%{_peoplecode}%","本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
+  else:
+    FOX_sendMessage("group","%{_groupcode}%","本南狐(版本：{@version}-build%{buildTimes}%)具有超级狐力！")
+
+function FOX_showHelpText(type: text, groupcode: text, peoplecode: text, content: text):
+  message "type:%{_type}% groupcode:%{_groupcode}% peoplecode:%{_peoplecode}% content:%{_content}%" to console
+  set {_registeredCommandPath} to "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml"
+  load yml {_registeredCommandPath} as {_registeredCommandPath}
+  set {_result} to "以下是可被南狐执行的命令："
+  loop yaml node keys "registered" from {_registeredCommandPath}:
+    set {_description} to yml value "registered.%loop-value%.description" from  {_registeredCommandPath}
+    set {_result} to "%{_result}%%nl%%loop-value% - %{_description}%"
+  if {_type} is "friend":
+    FOX_sendMessage("friend","%{_peoplecode}%",{_result})
+  else:
+    FOX_sendMessage("group","%{_groupcode}%",{_result})
+    
+
+function FOX_reloadKitFox(type: text, groupcode: text, peoplecode: text, content: text): # TODO：加入插件重载
+  set {_configPath} to "plugins/KitFox/config.yml"
+  set {_silent} to FOX_getConfigValue("silent-mode")
+  if FOX_isInList({_configPath},"%{_peoplecode}%","admin") is true:# 检测指令发送者是否有执行权限
+    if {_silent} is "false":
+      if {_type} is "friend":
+        FOX_sendMessage("friend","%{_peoplecode}%","南狐正在重载...")
+      else:
+        FOX_sendMessage("group","%{_groupcode}%","南狐正在重载...")
+      set {buildTimes} to {buildTimes}+1 # 增加版本计次
+      set {lastVersion} to "{@version}"
+      # wait 1 second #避免报错
+      reload skript "KitFox-CORE"
+
+function FOX_executeCommand(type: text, groupcode: text, peoplecode: text, content: text):
+  set {_configPath} to "plugins/KitFox/config.yml"
+  set {_silent} to FOX_getConfigValue("silent-mode")
+  if FOX_isInList({_configPath},"%{_peoplecode}%","admin") is true:# 检测指令发送者是否有执行权限
+    set {_argument::*} to {_content} split by " " # 指令分割
+    command "/%{_argument::3}%" by console
+    if {_silent} is "false":
+      if {_type} is "friend":
+        FOX_sendMessage("friend","%{_peoplecode}%","指令已发送至控制台！")
+      else:
+        FOX_sendMessage("group","%{_groupcode}%","指令已发送至控制台！")
+  
+# -------------------------------------------------------
+on load:
+  set {FOX_loading} to true
+  if "{@version}" is not "%{lastVersion}%":
+    set {lastVersion} to "{@version}"
+    set {buildTimes} to 1
+  message "[KitFox] 南狐(版本：{@version}-build%{buildTimes}%)启动中……" to console      
+  FOX_registerCoreCommand()
+  set {_configPath} to "plugins/KitFox/config.yml"
+  set {_registeredCommandPath} to "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml"
+  if yml file {_registeredCommandPath} exists: # 检测因为神秘原因没有被正常删除的注册命令文件是否存在
+    delete yml {_registeredCommandPath}
+  if yml file {_configPath} exists: # 检测配置文件是否存在
+    message "[KitFox] 配置文件加载成功！" to console
+  else:
+    message "[KitFox] 正在生成配置文件..." to console
+    FOX_createConfig()
+  if FOX_getConfigValue("config-version") is not "{@config-version}":
+    message "[KitFox] 配置文件过旧！或许你应该删掉他然后重建？" to console
+  set {FOX_Operator::*} to FOX_getConfigList("admin")
+  loop {FOX_Operator::*}:
+    FOX_sendMessage("friend","%loop-value%","南狐已启动！")
+    set {FOX_loading} to false
+
+# 当脚本被关闭时  
+on unload:
+  delete yml "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml" # 删除存在的命令注册缓存
+  message "[KitFox] 南狐 关闭中……" to console
+  
+# 当服务器启动完成时  
+on server start:
+  set {_groupid} to FOX_getConfigValue("main-group")
+  FOX_sendMessage("group",{_groupid},"服务器已启动！")
+
+# 当服务器关闭时
+on server stop:
+  set {_groupid} to FOX_getConfigValue("main-group")
+  FOX_sendMessage("group",{_groupid},"服务器已关闭！")
+  
+# 当机器人收到群聊消息时(命令执行部分)
+on bot receive group message:
+  set {_configPath} to "plugins/KitFox/config.yml"
+  set {_registeredCommandPath} to "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml"
+  set {_groupid} to FOX_getConfigValue("main-group")
+  set {_prefix} to FOX_getConfigValue("command-prefix")
+  set {_silent} to FOX_getConfigValue("silent-mode")
+  # message "qq-group's id:%qq-group's id%,group-member's id:%group-member's id%" to console # DEBUG
+  if FOX_isInList({_configPath},"%qq-group's id%","enabled-groups") is true: # 启用群聊
+    bot-message's content start with {_prefix}: # 命令前缀
+      set {_argument::*} to bot-message's content split by " " # 指令分割
+      if FOX_isInNode({_registeredCommandPath} ,{_argument::2},"registered") is true:
+        load yml {_registeredCommandPath} as {_registeredCommandPath}
+        set {_targetFunction} to yml value "registered.%{_argument::2}%.function" from {_registeredCommandPath} 
+        set {_messageInfo::type} to "group"
+        set {_messageInfo::groupcode} to "%qq-group's id%"
+        set {_messageInfo::peoplecode} to "%group-member's id%"
+        set {_messageInfo::content} to "%bot-message's content%"
+        # message "messageInfo:%{_messageInfo::*}% messageInfo::code:%{_messageInfo::code::*}%" to console# DEBUG
+        FOX_executeMethod("%{_targetFunction}%",{_messageInfo::*})
+        unload yml {_registeredCommandPath}
+      else:
+        FOX_sendMessage("group","%qq-group's id%","命令不存在!")
+      
+# 当机器人收到私聊消息时(命令执行部分)
+on bot receive friend message:
+  set {_configPath} to "plugins/KitFox/config.yml"
+  set {_registeredCommandPath} to "plugins/KitFox/(DONTTOUCH!)registeredCommand.yml"
+  set {_groupid} to FOX_getConfigValue("main-group")
+  set {_prefix} to FOX_getConfigValue("command-prefix")
+  set {_silent} to FOX_getConfigValue("silent-mode")
+  message "qq-friend's id:%qq-friend's id%" to console # DEBUG
+  bot-message's content start with {_prefix}: # 命令前缀
+    set {_argument::*} to bot-message's content split by " " # 指令分割
+    if FOX_isInNode({_registeredCommandPath} ,{_argument::2},"registered") is true:
+      load yml {_registeredCommandPath} as {_registeredCommandPath}
+      set {_targetFunction} to yml value "registered.%{_argument::2}%.function" from {_registeredCommandPath} 
+      set {_messageInfo::1} to "friend"
+      set {_messageInfo::2} to "<none>"
+      set {_messageInfo::3} to "%qq-friend's id%"
+      set {_messageInfo::4} to "%bot-message's content%"
+      # message "messageInfo:%{_messageInfo::*}%" to console# DEBUG
+      FOX_executeMethod("%{_targetFunction}%",{_messageInfo::*})
+      unload yml {_registeredCommandPath}
+    else:
+      FOX_sendMessage("group","%qq-friend's id%","命令不存在!")      
+       
+# 当机器人收到消息时（群聊消息转发部分）
+on bot receive group message:
+  set {_groupid} to FOX_getConfigValue("main-group") # 读取主群群号
+  set {_prefix} to FOX_getConfigValue("command-prefix")
+  set {_cf} to FOX_getConfigValue("chat-forward")
+  bot-message's content start with {_prefix}:
+    stop
+  if "%qq-group's id%" is "%{_groupid}%":
+    if {_cf} is "true":
+      broadcast "[群聊]<%group-member's namecard%> %bot-message's content%"
+      
+# 当服务器内玩家发消息时
+on chat:
+  set {_groupid} to FOX_getConfigValue("main-group")
+  set {_cf} to FOX_getConfigValue("chat-forward")
+  if {_cf} is "true":
+    FOX_sendMessage("group","%{_groupid}%","[服务器]%player's name%: %message%")       
+    
+# 当玩家离开时
+on quit:
+  set {_groupid} to FOX_getConfigValue("main-group")
+  set {_cf} to FOX_getConfigValue("chat-forward")
+  set {_vanish} to FOX_getConfigValue("op-vanish")
+  if {_cf} is "true": # 聊天转发是否开启
+    if {_vanish} is "true": # 管理员隐身是否开启
+      if player is not op:
+        FOX_sendMessage("group","%{_groupid}%","%player's name% 离开了服务器")
+    else:
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 离开了服务器")
+      
+# 当玩家加入时
+on join:
+  set {_groupid} to FOX_getConfigValue("main-group")
+  set {_cf} to FOX_getConfigValue("chat-forward")
+  set {_vanish} to FOX_getConfigValue("op-vanish")
+  if {_cf} is "true": # 聊天转发是否开启
+    if {_vanish} is "true": # 管理员隐身是否开启
+      if player is not op:
+        FOX_sendMessage("group","%{_groupid}%","%player's name% 加入了服务器")
+    else:
+      FOX_sendMessage("group","%{_groupid}%","%player's name% 加入了服务器")
+    
